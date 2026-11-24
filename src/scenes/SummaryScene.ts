@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH } from '../game/constants';
+import { recordRun } from '../game/meta';
 import { run } from '../game/runState';
 import { pixelText } from '../game/systems/text';
 
@@ -39,6 +40,14 @@ export class SummaryScene extends Phaser.Scene {
       `Mejoras: ${run.upgrades.length} · Cartuchos: ${run.shells.length}/4`,
       9,
     ).setOrigin(0.5, 0);
+
+    const unlocked = recordRun(run.dollars);
+    if (unlocked.length > 0) {
+      pixelText(this, GAME_WIDTH / 2, 166, `DESBLOQUEADO: ${unlocked.join(', ')}`, 9, '#8be9fd').setOrigin(
+        0.5,
+        0,
+      );
+    }
 
     const prompt = pixelText(this, GAME_WIDTH / 2, 190, 'CLIC PARA VOLVER AL MENÚ', 11).setOrigin(
       0.5,

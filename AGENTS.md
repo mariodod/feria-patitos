@@ -27,6 +27,7 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 - **Lógica pura separada**: reglas de puntuación y de nivel van en `src/game/logic/` y no importan Phaser. Los sistemas de Phaser (`src/game/systems/`) solo orquestan.
 - **Hooks de mejoras** (`onHit`, `onStallStart` en `src/data/upgrades.ts`). No cablees mejoras concretas dentro de las clases de juego.
 - **Moneda**: la puntuación son dólares (`run.dollars` en `src/game/runState.ts`) y se gastan en la tienda. El HUD **no** debe mostrar la oleada ni cuántos patitos quedan: es información oculta a propósito.
+- **State por partida vs meta**: `run` se reinicia con `resetRun()` al empezar cada partida: mejoras, cartuchos, dólares y nodo se pierden. Solo `src/game/meta.ts` persiste (en `localStorage`) y únicamente guarda desbloqueos y dólares totales acumulados para umbrales. Nunca guardes mejoras de una partida.
 - **Cursor**: `GameScene` oculta el cursor (mira propia); el resto de escenas debe dejarlo visible (`setDefaultCursor('auto')`).
 - **Assets provisionales**: hasta M3 los sprites se generan con `Graphics.generateTexture()` en `BootScene`. Eso permite que la demo funcione sin archivos de imagen. Los assets definitivos van en `src/art/` con paleta reducida.
 - **Idioma**: código y mensajes de commit en inglés; documentación y textos de juego en español.
@@ -38,10 +39,10 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 | Tarea | Archivo / carpeta |
 | --- | --- |
 | Arranque y config del juego | `src/main.ts` |
-| Escenas (boot, menú, partida, HUD, tienda, resumen) | `src/scenes/` |
-| Definiciones de cartuchos, mejoras, puestos | `src/data/` |
+| Escenas (boot, menú, partida, HUD, tienda, mapa, resumen) | `src/scenes/` |
+| Definiciones de cartuchos, mejoras, puestos, nodos | `src/data/` |
 | Reglas sin motor (scoring, nivel) | `src/game/logic/` |
-| Sistemas y helpers de Phaser (texto, audio, spawn) | `src/game/systems/` |
+| Audio WebAudio y helpers de texto | `src/game/systems/` |
 | Constantes de resolución y eventos entre escenas | `src/game/constants.ts`, `src/game/events.ts` |
 | Sprites, paletas, fuentes | `src/art/` |
 
@@ -55,4 +56,5 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 
 - `npm run build` pasa sin errores.
 - `npm run dev` y la demo se juega de principio a fin sin errores en consola.
-- Si cambias la lógica de puntuación o baraja, actualiza la documentación del plan en `README.md`.
+- Al terminar una partida y empezar otra, mejoras, cartuchos y dólares están a cero (solo persisten desbloqueos).
+- Si cambias la lógica de puntuación, el mapa o la tienda, actualiza la documentación del plan en `README.md`.

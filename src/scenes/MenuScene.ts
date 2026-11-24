@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants';
+import { loadMeta } from '../game/meta';
 import { resetRun } from '../game/runState';
+import { unlockAudio } from '../game/systems/audio';
 import { pixelText } from '../game/systems/text';
 
 export class MenuScene extends Phaser.Scene {
@@ -27,7 +29,18 @@ export class MenuScene extends Phaser.Scene {
     const prompt = pixelText(this, GAME_WIDTH / 2, 182, 'CLIC PARA EMPEZAR', 12).setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.3, yoyo: true, repeat: -1, duration: 650 });
 
+    const meta = loadMeta();
+    pixelText(
+      this,
+      GAME_WIDTH / 2,
+      150,
+      `DÓLARES TOTALES: $${meta.totalDollars} · DESBLOQUEOS: ${meta.unlocked.length}`,
+      8,
+      '#8be9fd',
+    ).setOrigin(0.5);
+
     this.input.once('pointerdown', () => {
+      unlockAudio();
       resetRun();
       this.scene.start('game');
       this.scene.launch('hud');

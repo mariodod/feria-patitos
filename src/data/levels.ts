@@ -43,7 +43,7 @@ export const LEVEL_1: LevelDefinition = {
   id: 'puesto-1',
   name: 'PUESTO 1 · PATITOS',
   ammo: 30,
-  quota: 130,
+  quota: 100,
   waves: 3,
   ducks: [
     { spawnAt: 400, lane: 0, speed: 40, direction: 1, pattern: 'straight', wave: 1 },
@@ -68,7 +68,7 @@ export const LEVELS: LevelDefinition[] = [
     ...LEVEL_1,
     id: 'puesto-2',
     name: 'PUESTO 2 · PATITOS',
-    quota: 160,
+    quota: 130,
     ducks: LEVEL_1.ducks.map((duck, i) => ({
       ...duck,
       spawnAt: Math.max(200, duck.spawnAt - 300),
@@ -80,7 +80,7 @@ export const LEVELS: LevelDefinition[] = [
     ...LEVEL_1,
     id: 'puesto-3',
     name: 'PUESTO 3 · PATITOS',
-    quota: 190,
+    quota: 160,
     ducks: LEVEL_1.ducks.map((duck, i) => ({
       ...duck,
       spawnAt: Math.max(150, duck.spawnAt - 500),

@@ -1,16 +1,18 @@
+import type { StallKind } from '../data/nodes';
 import type { ShellId } from '../data/shells';
 
 export interface RunState {
   dollars: number;
   /** Cartuchos especiales consumibles; el jugador empieza sin ninguno. */
   shells: ShellId[];
-  /** Mejoras permanentes del arma y del puesto. */
+  /** Mejoras permanentes del arma y del puesto (solo durante esta partida). */
   upgrades: string[];
   stallIndex: number;
+  nextKind: StallKind;
 }
 
 export function createRun(): RunState {
-  return { dollars: 0, shells: [], upgrades: [], stallIndex: 0 };
+  return { dollars: 0, shells: [], upgrades: [], stallIndex: 0, nextKind: 'classic' };
 }
 
 export const run: RunState = createRun();

@@ -3,6 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from './game/constants';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { HudScene } from './scenes/HudScene';
+import { MapScene } from './scenes/MapScene';
 import { MenuScene } from './scenes/MenuScene';
 import { ShopScene } from './scenes/ShopScene';
 import { SummaryScene } from './scenes/SummaryScene';
@@ -19,5 +20,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, GameScene, HudScene, ShopScene, SummaryScene],
+  scene: [BootScene, MenuScene, GameScene, HudScene, ShopScene, MapScene, SummaryScene],
 });

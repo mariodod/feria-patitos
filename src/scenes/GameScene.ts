@@ -16,9 +16,10 @@ import {
   type HudState,
   type ShellView,
 } from '../game/events';
-import { isLevelComplete } from '../game/logic/level';
+import { applyStallKind, isLevelComplete } from '../game/logic/level';
 import { scoreHit } from '../game/logic/scoring';
 import { prepareShop, run } from '../game/runState';
+import { sfx } from '../game/systems/audio';
 import { pixelTextStyle } from '../game/systems/text';
 
 interface Duck {
@@ -48,7 +49,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.level = LEVELS[run.stallIndex] ?? LEVELS[LEVELS.length - 1];
+    this.level = applyStallKind(
+      LEVELS[run.stallIndex] ?? LEVELS[LEVELS.length - 1],
+      run.nextKind,
+    );
     this.ducks = [];
     this.earned = 0;
     this.elapsedMs = 0;
@@ -175,10 +179,12 @@ export class GameScene extends Phaser.Scene {
     const cost = shell?.ammoCost ?? SHOTGUN.ammoCost;
 
     if (this.ammo < cost) {
+      sfx.lose();
       this.finishRun(false);
       return;
     }
     this.ammo -= cost;
+    sfx.shoot();
 
     const radius = shell ? shell.radius + (shot.aimRadius - SHOTGUN.radius) : shot.aimRadius;
     const maxTargets = 1 + shot.extraTargets + (shell?.extraTargets ?? 0);
@@ -196,6 +202,7 @@ export class GameScene extends Phaser.Scene {
       .slice(0, maxTargets);
 
     if (slow > 0) this.slowUntil = this.time.now + slow * 1000;
+    this.muzzle(x, y, targets.length > 0);
 
     for (const target of targets) {
       const duck = target.duck;
@@ -221,6 +228,8 @@ export class GameScene extends Phaser.Scene {
       run.dollars += dollars;
       this.popScore(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y, dollars, bullseye);
       this.spark(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y);
+      if (bullseye) sfx.bullseye();
+      else sfx.hit();
       duck.sprite.destroy();
     }
 
@@ -254,6 +263,21 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  private muzzle(x: number, y: number, hit: boolean): void {
+    const flash = this.add
+      .image(x, y, 'spark')
+      .setDepth(90)
+      .setScale(hit ? 4 : 2)
+      .setTint(hit ? 0xffd166 : 0xfff1e6);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scale: 0,
+      duration: 140,
+      onComplete: () => flash.destroy(),
+    });
+  }
+
   private spark(x: number, y: number): void {
     for (let i = 0; i < 5; i += 1) {
       const bit = this.add.image(x, y, 'spark').setDepth(70);
@@ -272,6 +296,7 @@ export class GameScene extends Phaser.Scene {
   private checkLevelEnd(): void {
     if (!isLevelComplete(this.nextSpawn, this.level.ducks.length, this.ducks.length)) return;
     if (this.earned < this.level.quota) {
+      sfx.lose();
       this.finishRun(false);
       return;
     }
@@ -279,6 +304,7 @@ export class GameScene extends Phaser.Scene {
     this.running = false;
     this.scene.stop('hud');
     if (run.stallIndex >= LEVELS.length - 1) {
+      sfx.win();
       this.scene.start('summary', { success: true });
     } else {
       prepareShop();

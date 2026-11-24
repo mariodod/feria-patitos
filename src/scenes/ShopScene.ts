@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 import { SHELLS, SHELL_IDS, type ShellId } from '../data/shells';
 import { UPGRADES, UPGRADE_IDS } from '../data/upgrades';
 import { GAME_WIDTH } from '../game/constants';
+import { isUnlocked, loadMeta } from '../game/meta';
 import { run, shop } from '../game/runState';
+import { sfx } from '../game/systems/audio';
 import { pixelText } from '../game/systems/text';
 
 export class ShopScene extends Phaser.Scene {
@@ -17,14 +19,25 @@ export class ShopScene extends Phaser.Scene {
 
     if (shop.upgrades.length === 0) {
       shop.upgrades = Phaser.Math.RND.shuffle(
-        UPGRADE_IDS.filter((id) => !run.upgrades.includes(id)),
+        UPGRADE_IDS.filter((id) => !run.upgrades.includes(id) && isUnlocked(id)),
       ).slice(0, 3);
     }
-    if (!shop.shell) shop.shell = Phaser.Math.RND.pick(SHELL_IDS);
+    if (!shop.shell) {
+      shop.shell = Phaser.Math.RND.pick(SHELL_IDS.filter((id) => isUnlocked(id)));
+    }
 
     this.add.image(0, 0, 'backdrop').setOrigin(0, 0);
     this.add.rectangle(GAME_WIDTH / 2, 135, GAME_WIDTH, 270, 0x0e0f1a, 0.85);
 
+    const meta = loadMeta();
+    pixelText(
+      this,
+      GAME_WIDTH / 2,
+      254,
+      `TOTALES $${meta.totalDollars} · DESBLOQUEOS ${meta.unlocked.length}`,
+      8,
+      '#8be9fd',
+    ).setOrigin(0.5, 0);
     pixelText(this, GAME_WIDTH / 2, 14, 'TALLER DE LA FERIA', 16).setOrigin(0.5, 0);
     pixelText(this, GAME_WIDTH / 2, 36, `TUS DÓLARES: $${run.dollars}`, 12, '#ffd166').setOrigin(
       0.5,
@@ -87,6 +100,7 @@ export class ShopScene extends Phaser.Scene {
     run.dollars -= price;
     run.upgrades.push(id);
     shop.upgrades.splice(index, 1);
+    sfx.buy();
     this.scene.restart();
   }
 
@@ -104,13 +118,13 @@ export class ShopScene extends Phaser.Scene {
     run.dollars -= SHELLS[id].price;
     run.shells.push(id);
     shop.shell = null;
+    sfx.buy();
     this.scene.restart();
   };
 
   private nextStall = (): void => {
     run.stallIndex += 1;
-    this.scene.start('game');
-    this.scene.launch('hud');
+    this.scene.start('map');
   };
 
   private say(text: string): void {
