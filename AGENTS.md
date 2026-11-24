@@ -22,10 +22,12 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 - **TypeScript strict** (`tsconfig.json`). No uses `any` salvo que no haya alternativa y lo justifiques.
 - **Resolución fija 480×270.** `pixelArt: true`, `roundPixels: true`, escalado `Phaser.Scale.FIT`. No cambies la resolución ni actives anti-aliasing sin permiso: rompe la estética pixel art.
 - **Posiciones enteras** en sprites (`setPosition(Math.round(x), Math.round(y))`) para evitar bordes borrosos.
-- **Contenido data-driven**: cartas, reliquias y puestos se definen en `src/data/`, nunca como condicionales dentro del bucle de juego. Añadir una carta debe ser añadir un objeto de datos, no editar la lógica.
-- **Lógica pura separada**: reglas de puntuación, baraja y economía van en `src/game/logic/` y no importan Phaser. Los sistemas de Phaser (`src/game/systems/`) solo orquestan.
-- **Hooks de reliquias** (`onHit`, `onStallStart` en `src/data/relics.ts`). No cablees reliquias concretas dentro de las clases de juego.
+- **No hay cartas.** La escopeta base siempre está disponible con clic. Los **cartuchos especiales** son consumibles en 4 ranuras (teclas 1–4) y **las mejoras** son permanentes; al empezar no se tiene ninguno de los dos.
+- **Contenido data-driven**: cartuchos, mejoras y puestos se definen en `src/data/`, nunca como condicionales dentro del bucle de juego. Añadir un cartucho o una mejora debe ser añadir un objeto de datos, no editar la lógica.
+- **Lógica pura separada**: reglas de puntuación y de nivel van en `src/game/logic/` y no importan Phaser. Los sistemas de Phaser (`src/game/systems/`) solo orquestan.
+- **Hooks de mejoras** (`onHit`, `onStallStart` en `src/data/upgrades.ts`). No cablees mejoras concretas dentro de las clases de juego.
 - **Moneda**: la puntuación son dólares (`run.dollars` en `src/game/runState.ts`) y se gastan en la tienda. El HUD **no** debe mostrar la oleada ni cuántos patitos quedan: es información oculta a propósito.
+- **Cursor**: `GameScene` oculta el cursor (mira propia); el resto de escenas debe dejarlo visible (`setDefaultCursor('auto')`).
 - **Assets provisionales**: hasta M3 los sprites se generan con `Graphics.generateTexture()` en `BootScene`. Eso permite que la demo funcione sin archivos de imagen. Los assets definitivos van en `src/art/` con paleta reducida.
 - **Idioma**: código y mensajes de commit en inglés; documentación y textos de juego en español.
 - **Git/GitHub**: usa `gh` para cualquier operación de GitHub (issues, PRs, Pages). Rama principal `main`. No commitees `node_modules/`, `dist/` ni archivos `.local`.
@@ -37,16 +39,16 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 | --- | --- |
 | Arranque y config del juego | `src/main.ts` |
 | Escenas (boot, menú, partida, HUD, tienda, resumen) | `src/scenes/` |
-| Definiciones de cartas, reliquias, puestos | `src/data/` |
-| Reglas sin motor (scoring, mazo, economía) | `src/game/logic/` |
+| Definiciones de cartuchos, mejoras, puestos | `src/data/` |
+| Reglas sin motor (scoring, nivel) | `src/game/logic/` |
 | Sistemas y helpers de Phaser (texto, audio, spawn) | `src/game/systems/` |
 | Constantes de resolución y eventos entre escenas | `src/game/constants.ts`, `src/game/events.ts` |
 | Sprites, paletas, fuentes | `src/art/` |
 
 ## Cómo añadir contenido
 
-1. **Carta de disparo**: añade una entrada al catálogo de `src/data/cards.ts` con `id`, `nombre`, `coste`, `efecto` y valores. La lógica del efecto va en un sistema registrado por `id`.
-2. **Reliquia**: añade una entrada en `src/data/relics.ts` con `price` y los hooks `onHit` y/o `onStallStart` que necesite.
+1. **Cartucho especial**: añade una entrada en `src/data/shells.ts` con `radius`, `multiplier`, `ammoCost`, `extraTargets`, `slow`, `price` y `hex`. Se consume al disparar y no se posee al empezar.
+2. **Mejora**: añade una entrada en `src/data/upgrades.ts` con `price` y los hooks `onHit` y/o `onStallStart` que necesite. Es permanente durante la partida.
 3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición, cuota, número de oleadas y la lista cerrada de patitos (`spawnAt`, carril, velocidad, dirección, `pattern`, `wave` y `gold`). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
 
 ## Antes de dar algo por terminado

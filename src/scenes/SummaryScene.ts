@@ -19,6 +19,7 @@ export class SummaryScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.input.setDefaultCursor('auto');
     this.add.image(0, 0, 'backdrop').setOrigin(0, 0);
     this.add.rectangle(GAME_WIDTH / 2, 135, GAME_WIDTH, 270, 0x0e0f1a, 0.85);
 
@@ -35,7 +36,7 @@ export class SummaryScene extends Phaser.Scene {
       this,
       GAME_WIDTH / 2,
       146,
-      `Mazo: ${run.deck.length} cartas  ·  Reliquias: ${run.relics.length}`,
+      `Mejoras: ${run.upgrades.length} · Cartuchos: ${run.shells.length}/4`,
       9,
     ).setOrigin(0.5, 0);
 

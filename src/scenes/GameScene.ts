@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { CARDS } from '../data/cards';
 import { LANES, LEVELS, SCORING, type DuckPattern, type DuckSpawn } from '../data/levels';
-import { RELICS, type HitContext } from '../data/relics';
+import { SHOTGUN, SHELLS, type ShellId } from '../data/shells';
+import { UPGRADES, type HitContext } from '../data/upgrades';
 import {
   BODY_OFFSET_Y,
   BULLSEYE_OFFSET_X,
@@ -9,15 +9,13 @@ import {
   DUCK_LIFETIME,
   GAME_HEIGHT,
   GAME_WIDTH,
-  HAND_SIZE,
 } from '../game/constants';
 import {
   HUD_STATE_EVENT,
-  SELECT_CARD_EVENT,
-  type CardView,
+  SELECT_SHELL_EVENT,
   type HudState,
+  type ShellView,
 } from '../game/events';
-import { playCard, startHand, type DeckState } from '../game/logic/deck';
 import { isLevelComplete } from '../game/logic/level';
 import { scoreHit } from '../game/logic/scoring';
 import { prepareShop, run } from '../game/runState';
@@ -36,8 +34,7 @@ export class GameScene extends Phaser.Scene {
   private level = LEVELS[0];
   private ducks: Duck[] = [];
   private crosshair!: Phaser.GameObjects.Image;
-  private deck!: DeckState;
-  private selectedCard = 0;
+  private selectedShell = -1;
   private earned = 0;
   private ammo = 0;
   private ammoMax = 0;
@@ -58,11 +55,10 @@ export class GameScene extends Phaser.Scene {
     this.nextSpawn = 0;
     this.slowUntil = 0;
     this.running = true;
+    this.selectedShell = -1;
 
-    this.deck = startHand(run.deck, HAND_SIZE, Math.random);
-    this.selectedCard = 0;
-    this.ammoMax = run.relics.reduce(
-      (total, id) => RELICS[id]?.onStallStart?.(total) ?? total,
+    this.ammoMax = run.upgrades.reduce(
+      (total, id) => UPGRADES[id]?.onStallStart?.(total) ?? total,
       this.level.ammo,
     );
     this.ammo = this.ammoMax;
@@ -76,7 +72,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      // La franja inferior son las cartas: la gestiona HudScene.
+      // La franja inferior son los cartuchos: la gestiona HudScene.
       if (pointer.worldY >= 214) return;
       if (!this.running) return;
       this.fire(pointer.worldX, pointer.worldY);
@@ -84,12 +80,13 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
       const index = Number(event.key) - 1;
-      if (index >= 0 && index < HAND_SIZE) this.selectCard(index);
+      if (index >= 0 && index < 4) this.selectShell(index);
     });
 
-    this.game.events.on(SELECT_CARD_EVENT, this.selectCard, this);
+    this.game.events.on(SELECT_SHELL_EVENT, this.selectShell, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off(SELECT_CARD_EVENT, this.selectCard, this);
+      this.game.events.off(SELECT_SHELL_EVENT, this.selectShell, this);
+      this.input.setDefaultCursor('auto');
     });
 
     this.emitHud();
@@ -153,24 +150,40 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private selectCard(index: number): void {
-    if (!this.running || index < 0 || index >= this.deck.hand.length) return;
-    this.selectedCard = index;
+  private selectShell(index: number): void {
+    if (!this.running || index < 0 || index >= run.shells.length) return;
+    this.selectedShell = this.selectedShell === index ? -1 : index;
     this.emitHud();
   }
 
-  private fire(x: number, y: number): void {
-    const cardId = this.deck.hand[this.selectedCard];
-    if (!cardId) return;
-    const card = CARDS[cardId];
+  private applyHooks(ctx: HitContext): HitContext {
+    return run.upgrades.reduce((value, id) => UPGRADES[id]?.onHit?.(value) ?? value, ctx);
+  }
 
-    const affordable = this.deck.hand.some((id) => this.ammo >= CARDS[id].ammoCost);
-    if (!affordable) {
+  private fire(x: number, y: number): void {
+    const shot = this.applyHooks({
+      dollars: 0,
+      bullseye: false,
+      gold: false,
+      aimRadius: SHOTGUN.radius,
+      extraTargets: 0,
+      slowOnHit: 0,
+    });
+
+    const shellId: ShellId | undefined = run.shells[this.selectedShell];
+    const shell = shellId ? SHELLS[shellId] : null;
+    const cost = shell?.ammoCost ?? SHOTGUN.ammoCost;
+
+    if (this.ammo < cost) {
       this.finishRun(false);
       return;
     }
-    if (this.ammo < card.ammoCost) return;
-    this.ammo -= card.ammoCost;
+    this.ammo -= cost;
+
+    const radius = shell ? shell.radius + (shot.aimRadius - SHOTGUN.radius) : shot.aimRadius;
+    const maxTargets = 1 + shot.extraTargets + (shell?.extraTargets ?? 0);
+    const slow = shot.slowOnHit + (shell?.slow ?? 0);
+    const multiplier = shell?.multiplier ?? SHOTGUN.multiplier;
 
     const targets = this.ducks
       .map((duck, index) => ({
@@ -178,14 +191,11 @@ export class GameScene extends Phaser.Scene {
         index,
         distance: Phaser.Math.Distance.Between(x, y, duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y),
       }))
-      .filter((target) => target.distance <= card.radius)
-      .sort(
-        (a, b) =>
-          b.duck.sprite.depth - a.duck.sprite.depth || b.index - a.index,
-      )
-      .slice(0, card.hits);
+      .filter((target) => target.distance <= radius)
+      .sort((a, b) => b.duck.sprite.depth - a.duck.sprite.depth || b.index - a.index)
+      .slice(0, maxTargets);
 
-    if (card.slow > 0) this.slowUntil = this.time.now + card.slow * 1000;
+    if (slow > 0) this.slowUntil = this.time.now + slow * 1000;
 
     for (const target of targets) {
       const duck = target.duck;
@@ -197,14 +207,15 @@ export class GameScene extends Phaser.Scene {
           duck.sprite.y - BODY_OFFSET_Y,
         ) <= SCORING.bullseyeRadius;
 
-      const context: HitContext = {
-        dollars: scoreHit(bullseye, duck.gold) * card.multiplier,
+      const hit = this.applyHooks({
+        dollars: scoreHit(bullseye, duck.gold) * multiplier,
         bullseye,
         gold: duck.gold,
-      };
-      const dollars = Math.round(
-        run.relics.reduce((ctx, id) => RELICS[id]?.onHit?.(ctx) ?? ctx, context).dollars,
-      );
+        aimRadius: 0,
+        extraTargets: 0,
+        slowOnHit: 0,
+      });
+      const dollars = Math.round(hit.dollars);
 
       this.earned += dollars;
       run.dollars += dollars;
@@ -219,8 +230,11 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.shake(60, 0.004);
     }
 
-    this.deck = playCard(this.deck, this.selectedCard, HAND_SIZE, Math.random);
-    this.selectedCard = Math.max(0, Math.min(this.selectedCard, this.deck.hand.length - 1));
+    // El cartucho se consume; vuelve a dispararse con la escopeta base.
+    if (shell) {
+      run.shells.splice(this.selectedShell, 1);
+      this.selectedShell = -1;
+    }
 
     this.checkLevelEnd();
     this.emitHud();
@@ -279,14 +293,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private emitHud(): void {
-    const hand: CardView[] = this.deck.hand.map((id, index) => ({
-      id,
-      name: CARDS[id].name,
-      cost: CARDS[id].ammoCost,
-      color: CARDS[id].hex,
-      selected: index === this.selectedCard,
-      affordable: this.ammo >= CARDS[id].ammoCost,
-    }));
+    const shells: (ShellView | null)[] = [];
+    for (let i = 0; i < 4; i += 1) {
+      const id = run.shells[i];
+      shells.push(
+        id
+          ? { id, name: SHELLS[id].name, cost: SHELLS[id].ammoCost, hex: SHELLS[id].hex }
+          : null,
+      );
+    }
 
     const state: HudState = {
       levelName: this.level.name,
@@ -294,7 +309,8 @@ export class GameScene extends Phaser.Scene {
       quota: this.level.quota,
       ammo: this.ammo,
       ammoMax: this.ammoMax,
-      hand,
+      shells,
+      selected: this.selectedShell,
     };
     this.game.events.emit(HUD_STATE_EVENT, state);
   }

@@ -1,10 +1,10 @@
 # Feria de Patitos 🦆🎯
 
-Un *shooting gallery* de feria convertido en roguelike de barajas: eliges qué tipo de disparo usar de tu mano de cartas, apuntas a los patitos y encadenas combos para superar la cuota de cada puesto. Entre puestos gastas tus tickets en la tienda, consigues nuevos disparos y reliquias, y construyes una build antes de que acabe la noche.
+Un *shooting gallery* de feria convertido en roguelike: disparas con una escopeta base, usas **cartuchos especiales** que compras y mejoras el arma entre puestos. Apuntas a los patitos para ganar dólares y superar la cuota de cada puesto. No hay cartas: al empezar no tienes ningún cartucho ni mejora.
 
-Estética **pixel art** con resolución interna baja (480×270) escalada con vecino más cercano, interfaz de cartas y números de daño estilo *Balatro*.
+Estética **pixel art** con resolución interna baja (480×270) escalada con vecino más cercano y números de dinero estilo *Balatro*.
 
-> **Estado: M2 completado.** Partida de 3 puestos con mano de cartas, tienda, reliquias y dólares como moneda. Queda el M3 (juice, mapa y progresión meta).
+> **Estado: M2 completado.** Partida de 3 puestos con escopeta base, cartuchos especiales, mejoras, tienda y dólares como moneda. Queda el M3 (juice, mapa y progresión meta).
 
 ---
 
@@ -14,7 +14,7 @@ Estética **pixel art** con resolución interna baja (480×270) escalada con vec
 
 | Opción | Por qué se descarta / se elige |
 | --- | --- |
-| **Phaser 4 + TS + Vite** ✅ | Motor 2D maduro con todo lo que esta demo necesita ya resuelto: sprites, input, tweens, escalado pixel-perfect y escenas. TypeScript aporta seguridad al estado complejo de un roguelike (barajas, reliquias, hooks). Vite da arranque y build rapidísimos. Además, se publica en GitHub Pages: cualquiera juega con un link, sin instalar nada. |
+| **Phaser 4 + TS + Vite** ✅ | Motor 2D maduro con todo lo que esta demo necesita ya resuelto: sprites, input, tweens, escalado pixel-perfect y escenas. TypeScript aporta seguridad al estado complejo de un roguelike (cartuchos, mejoras, hooks). Vite da arranque y build rapidísimos. Además, se publica en GitHub Pages: cualquiera juega con un link, sin instalar nada. |
 | Godot 4 | Excelente motor 2D, pero añade un binario pesado y una curva de arranque mayor para una primera demo compartible. Ideal si más adelante queremos exportar a escritorio/consola. |
 | Unity | Demasiado pesado para el alcance; demasiada configuración frente a lo que necesitamos. |
 | React + Canvas propio | La UI de cartas encaja bien en DOM, pero habría que reimplementar input, escenas, partículas y escalado que Phaser ya trae. |
@@ -26,7 +26,7 @@ Decisión: web con Phaser 4. Si en el futuro queremos una capa de UI tipo Balatr
 
 ## Plan para la primera demo jugable
 
-La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas, puntuación y tienda entre ellos, y llegar a una pantalla de victoria/derrota. Aproximadamente 5–10 minutos de partida.
+La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con la escopeta, cartuchos y mejoras, con tienda entre ellos, y llegar a una pantalla de victoria/derrota. Aproximadamente 5–10 minutos de partida.
 
 ### M0 — Base ✅ (hecho)
 - [x] Repositorio en GitHub con `README.md` y `AGENTS.md`.
@@ -46,11 +46,11 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 - [ ] Sprites definitivos en Aseprite (los provisionales ya se generan por código en `BootScene`).
 
 ### M2 — Capa roguelike ✅ (hecho)
-- [x] Baraja de **cartas de disparo**: mano de 4 cartas, seleccionar una, disparar, descartar y robar otra (`src/game/logic/deck.ts`).
-- [x] 5 tipos de disparo: normal, precisión, escopeta, rebote (2 patitos) y congelar.
-- [x] Dólares con multiplicadores de carta, bonus por diana, patito dorado y reliquias; números flotantes y sacudida.
-- [x] 3 reliquias con hooks (`onHit`, `onStallStart`) y tienda para comprar cartas y reliquias.
-- [x] Tienda entre puestos: comprar con dólares; se retira la oferta comprada.
+- [x] **Escopeta base** siempre disponible con clic; al empezar no hay cartuchos ni mejoras.
+- [x] **Cartuchos especiales** en 4 ranuras (teclas 1–4 o clic): precisión, escopeta, rebote y congelar. Se consumen al usarlos.
+- [x] **8 mejoras permanentes** del arma y del puesto con hooks (`onHit`, `onStallStart`).
+- [x] Dólares con multiplicadores de cartucho, bonus por diana, patito dorado y mejoras; números flotantes y sacudida.
+- [x] Tienda entre puestos: comprar mejoras y cartuchos con dólares; se retira la oferta comprada y el cursor vuelve a verse.
 - [x] Bucle de partida: 3 puestos → tienda entre ellos → pantalla de resumen → menú.
 
 ### M3 — Juice y cierre de demo
@@ -61,19 +61,19 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 - [ ] Publicar en GitHub Pages y verificar que la demo corre sin errores en consola.
 
 ### Definición de «demo jugable»
-`npm install && npm run dev` → menú → partida de 3 puestos con cartas y tienda → pantalla final → reinicio. Sin errores en consola y `npm run build` pasa.
+`npm install && npm run dev` → menú → partida de 3 puestos con escopeta, cartuchos y tienda → pantalla final → reinicio. Sin errores en consola y `npm run build` pasa.
 
 ---
 
 ## Concepto de juego (bucle principal)
 
-1. **Robar** una mano de cartas de disparo del mazo.
-2. **Elegir** una carta: cada una define cómo sale el disparo (cadencia, alcance, rebotes, daño).
-3. **Apuntar y disparar** a los patitos que cruzan el puesto con balas limitadas; diana = bonus, patito dorado = el doble.
-4. **Ganar dólares**: cada patito tiene valor base; la precisión, las cartas y las reliquias lo multiplican.
+1. **Disparar** con la escopeta base (clic) o elegir un cartucho especial con las teclas 1–4.
+2. **Cada cartucho** cambia el disparo: mira más pequeña, más ancha, dos patitos o ralentización. Se consume al usarlo.
+3. **Apuntar a los patitos** con balas limitadas; diana = bonus, patito dorado = el doble.
+4. **Ganar dólares**: cada patito tiene valor base; la precisión, los cartuchos y las mejoras lo multiplican.
 5. **Cumplir la cuota** del puesto para avanzar; si no, se acaba la partida.
-6. **Comprar** en la tienda con los dólares ganados: nuevas cartas y reliquias.
-7. Repetir hasta completar la feria. Las builds se construyen con sinergias entre cartas y reliquias.
+6. **Comprar** en la tienda con los dólares ganados: mejoras permanentes y cartuchos nuevos.
+7. Repetir hasta completar la feria. La build se construye con sinergias entre mejoras y cartuchos.
 
 ---
 
@@ -89,9 +89,9 @@ npm run preview  # sirve dist/ localmente
 ## Controles (demo actual)
 
 - **Mover el ratón**: mira.
-- **Teclas 1–4 o clic en una carta**: elegir carta de disparo.
-- **Clic izquierdo sobre el puesto**: disparar (gasta las balas de la carta).
-- **Clic en la tienda**: comprar ofertas o ir al siguiente puesto.
+- **Clic izquierdo sobre el puesto**: disparar con la escopeta base.
+- **Teclas 1–4 o clic en una ranura**: seleccionar un cartucho especial (si lo tienes); vuelve a pulsar para volver a la escopeta.
+- **Clic en la tienda**: comprar mejoras/cartuchos o ir al siguiente puesto.
 - **Clic en el resumen**: volver al menú.
 
 ## Estructura
@@ -100,12 +100,12 @@ npm run preview  # sirve dist/ localmente
 src/
   main.ts              # config de Phaser y arranque
   scenes/              # Boot, Menu, Game, Hud, Shop, Summary
-  data/                # cards, relics, levels (data-driven)
+  data/                # shells, upgrades, levels (data-driven)
   game/
-    constants.ts       # resolución, offsets, layout de cartas
+    constants.ts       # resolución, offsets, layout de cartuchos
     events.ts          # eventos y tipos del HUD
-    runState.ts        # dólares, mazo, reliquias y puesto actual
-    logic/             # scoring, baraja y reglas de nivel (puro, sin Phaser)
+    runState.ts        # dólares, cartuchos, mejoras y puesto actual
+    logic/             # scoring y reglas de nivel (puro, sin Phaser)
     systems/           # helpers de Phaser (texto)
   art/                 # sprites y paletas (Aseprite / PNG)
 AGENTS.md              # convenciones para agentes y contribuidores

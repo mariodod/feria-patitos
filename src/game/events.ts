@@ -1,13 +1,11 @@
 export const HUD_STATE_EVENT = 'hud:state';
-export const SELECT_CARD_EVENT = 'select:card';
+export const SELECT_SHELL_EVENT = 'select:shell';
 
-export interface CardView {
+export interface ShellView {
   id: string;
   name: string;
   cost: number;
-  color: string;
-  selected: boolean;
-  affordable: boolean;
+  hex: string;
 }
 
 export interface HudState {
@@ -16,5 +14,8 @@ export interface HudState {
   quota: number;
   ammo: number;
   ammoMax: number;
-  hand: CardView[];
+  /** Cuatro ranuras; null significa vacía. */
+  shells: (ShellView | null)[];
+  /** -1 = escopeta base, 0..3 = cartucho seleccionado. */
+  selected: number;
 }

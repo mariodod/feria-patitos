@@ -9,6 +9,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.input.setDefaultCursor('auto');
     this.add.image(0, 0, 'backdrop').setOrigin(0, 0);
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0e0f1a, 0.6);
 
@@ -17,7 +18,7 @@ export class MenuScene extends Phaser.Scene {
       this,
       GAME_WIDTH / 2,
       126,
-      'Elige una carta (1-4 o clic) y dispara.\nCuerpo $10 · Diana $25 · Dorado el doble',
+      'Dispara con la escopeta. Compra mejoras y cartuchos.\nCuerpo $10 · Diana $25 · Dorado el doble',
       10,
     )
       .setOrigin(0.5)
