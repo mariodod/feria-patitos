@@ -102,7 +102,7 @@ npm run preview  # sirve dist/ localmente
 - **Teclas 1–4 o clic en una ranura**: seleccionar un cartucho especial (si lo tienes); vuelve a pulsar para volver a la escopeta.
 - **Clic en la tienda**: comprar mejoras/cartuchos, refrescar ofertas ($15) o ir al mapa.
 - **Clic en el mapa**: elegir el tipo de siguiente puesto.
-- **Clic en el resumen**: volver al menú.
+- **Clic en el resumen**: volver al menú. El resumen indica por qué acabó la partida (cuota no alcanzada, sin balas o victoria) y qué pasó con el último disparo.
 
 ## Estructura
 

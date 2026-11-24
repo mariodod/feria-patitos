@@ -22,6 +22,16 @@ import { prepareShop, run } from '../game/runState';
 import { sfx } from '../game/systems/audio';
 import { pixelTextStyle } from '../game/systems/text';
 
+type RunEndReason = 'win' | 'quota' | 'ammo';
+
+interface RunEndData {
+  success: boolean;
+  reason: RunEndReason;
+  earned: number;
+  quota: number;
+  lastShot: { hit: boolean; dollars: number; bullseye: boolean };
+}
+
 interface Duck {
   sprite: Phaser.GameObjects.Image;
   baseSpeed: number;
@@ -49,6 +59,7 @@ export class GameScene extends Phaser.Scene {
   private nextSpawn = 0;
   private slowUntil = 0;
   private running = true;
+  private lastShot = { hit: false, dollars: 0, bullseye: false };
 
   constructor() {
     super('game');
@@ -66,6 +77,7 @@ export class GameScene extends Phaser.Scene {
     this.slowUntil = 0;
     this.running = true;
     this.selectedShell = -1;
+    this.lastShot = { hit: false, dollars: 0, bullseye: false };
 
     this.ammoMax = run.upgrades.reduce(
       (total, id) => UPGRADES[id]?.onStallStart?.(total) ?? total,
@@ -199,7 +211,7 @@ export class GameScene extends Phaser.Scene {
 
     if (this.ammo < cost) {
       sfx.lose();
-      this.finishRun(false);
+      this.finishRun('ammo');
       return;
     }
     this.ammo -= cost;
@@ -227,6 +239,7 @@ export class GameScene extends Phaser.Scene {
 
     if (slow > 0) this.slowUntil = this.time.now + slow * 1000;
     this.muzzle(x, y, targets.length > 0);
+    this.lastShot = { hit: targets.length > 0, dollars: 0, bullseye: false };
 
     for (const target of targets) {
       const duck = target.duck;
@@ -252,6 +265,8 @@ export class GameScene extends Phaser.Scene {
 
       const willDie = duck.hp <= damage;
       const dollars = Math.round(willDie ? hit.dollars : hit.dollars / 2);
+      this.lastShot.dollars += dollars;
+      this.lastShot.bullseye = this.lastShot.bullseye || bullseye;
       this.earned += dollars;
       run.dollars += dollars;
       this.popScore(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y * size, dollars, bullseye);
@@ -334,7 +349,7 @@ export class GameScene extends Phaser.Scene {
     if (!isLevelComplete(this.nextSpawn, this.level.ducks.length, this.ducks.length)) return;
     if (this.earned < this.level.quota) {
       sfx.lose();
-      this.finishRun(false);
+      this.finishRun('quota');
       return;
     }
 
@@ -342,17 +357,27 @@ export class GameScene extends Phaser.Scene {
     this.scene.stop('hud');
     if (run.stallIndex >= LEVELS.length - 1) {
       sfx.win();
-      this.scene.start('summary', { success: true });
+      this.scene.start('summary', this.endData('win', true));
     } else {
       prepareShop();
       this.scene.start('shop');
     }
   }
 
-  private finishRun(success: boolean): void {
+  private endData(reason: RunEndReason, success: boolean): RunEndData {
+    return {
+      success,
+      reason,
+      earned: this.earned,
+      quota: this.level.quota,
+      lastShot: { ...this.lastShot },
+    };
+  }
+
+  private finishRun(reason: RunEndReason): void {
     this.running = false;
     this.scene.stop('hud');
-    this.scene.start('summary', { success });
+    this.scene.start('summary', this.endData(reason, false));
   }
 
   private emitHud(): void {
