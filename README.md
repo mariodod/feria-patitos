@@ -32,7 +32,7 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 - [x] Repositorio en GitHub con `README.md` y `AGENTS.md`.
 - [x] Vite + TypeScript strict + Phaser 4.
 - [x] Resolución interna 480×270, escalado `FIT`, `pixelArt: true`.
-- [x] Demo semilla: patitos que rebotan, mira, disparos, balas, tiempo, puntos y reinicio.
+- [x] Demo semilla: patitos montados en un palito, con diana en el centro, que se deslizan por rieles; mira, disparos, balas, tiempo, puntos y reinicio.
 
 ### M1 — Núcleo de disparo
 - [ ] Escenas separadas: `BootScene`, `MenuScene`, `GameScene`, `HudScene`.

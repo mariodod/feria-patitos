@@ -3,14 +3,15 @@ import Phaser from 'phaser';
 export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 270;
 
-const DUCK_SIZE = 12;
+const LANES = [70, 120, 170];
+const DUCK_HALF_WIDTH = 16;
+const HIT_OFFSET_Y = 26;
 const ROUND_SECONDS = 30;
 const START_AMMO = 30;
 
 interface Duck {
   sprite: Phaser.GameObjects.Image;
   vx: number;
-  vy: number;
   points: number;
 }
 
@@ -92,13 +93,14 @@ class DemoScene extends Phaser.Scene {
     const dt = delta / 1000;
     for (const duck of this.ducks) {
       duck.sprite.x += duck.vx * dt;
-      duck.sprite.y += duck.vy * dt;
 
-      if (duck.sprite.x < DUCK_SIZE / 2 || duck.sprite.x > GAME_WIDTH - DUCK_SIZE / 2) {
+      if (duck.sprite.x < DUCK_HALF_WIDTH || duck.sprite.x > GAME_WIDTH - DUCK_HALF_WIDTH) {
         duck.vx *= -1;
-      }
-      if (duck.sprite.y < 48 + DUCK_SIZE / 2 || duck.sprite.y > 198 - DUCK_SIZE / 2) {
-        duck.vy *= -1;
+        duck.sprite.x = Phaser.Math.Clamp(
+          duck.sprite.x,
+          DUCK_HALF_WIDTH,
+          GAME_WIDTH - DUCK_HALF_WIDTH,
+        );
       }
       duck.sprite.setFlipX(duck.vx < 0);
     }
@@ -106,15 +108,14 @@ class DemoScene extends Phaser.Scene {
 
   private spawnDuck(): void {
     const sprite = this.add
-      .image(Phaser.Math.Between(20, GAME_WIDTH - 20), Phaser.Math.Between(60, 185), 'duck')
+      .image(Phaser.Math.Between(20, GAME_WIDTH - 20), Phaser.Math.RND.pick(LANES), 'duck')
+      .setOrigin(0.5, 1)
       .setScale(2);
     const duck: Duck = {
       sprite,
       vx: Phaser.Math.Between(25, 55) * (Phaser.Math.Between(0, 1) ? 1 : -1),
-      vy: Phaser.Math.Between(-18, 18),
       points: 10,
     };
-    if (duck.vy === 0) duck.vy = 8;
     this.ducks.push(duck);
   }
 
@@ -125,15 +126,19 @@ class DemoScene extends Phaser.Scene {
     }
     this.ammo -= 1;
 
-    const index = this.ducks.findIndex(
-      (duck) => Phaser.Math.Distance.Between(x, y, duck.sprite.x, duck.sprite.y) <= 12,
-    );
+    const index = this.ducks.findIndex((duck) => {
+      const cx = duck.sprite.x;
+      const cy = duck.sprite.y - HIT_OFFSET_Y;
+      return Phaser.Math.Distance.Between(x, y, cx, cy) <= 13;
+    });
 
     if (index !== -1) {
       const duck = this.ducks.splice(index, 1)[0];
+      const cx = duck.sprite.x;
+      const cy = duck.sprite.y - HIT_OFFSET_Y;
       this.score += duck.points;
-      this.popScore(duck.sprite.x, duck.sprite.y, duck.points);
-      this.spark(duck.sprite.x, duck.sprite.y);
+      this.popScore(cx, cy, duck.points);
+      this.spark(cx, cy);
       duck.sprite.destroy();
       this.cameras.main.shake(60, 0.004);
     }
@@ -194,15 +199,33 @@ class DemoScene extends Phaser.Scene {
   private createTextures(): void {
     const g = this.make.graphics({}, false);
 
+    // Palito que sostiene al patito sobre el riel.
+    g.fillStyle(0x9b6b3f);
+    g.fillRect(7, 12, 2, 8);
+    g.fillStyle(0xc98b52);
+    g.fillRect(7, 12, 1, 8);
+
+    // Cuerpo, cabeza, ala, cola, pico y ojo.
     g.fillStyle(0xf4d35e);
-    g.fillRect(2, 3, 8, 7);
+    g.fillRect(3, 3, 10, 9);
+    g.fillRect(9, 1, 5, 5);
+    g.fillRect(1, 4, 2, 4);
     g.fillStyle(0xffe9a8);
-    g.fillRect(3, 4, 5, 3);
+    g.fillRect(4, 5, 5, 3);
     g.fillStyle(0xef6f6c);
-    g.fillRect(10, 5, 2, 2);
+    g.fillRect(14, 3, 2, 2);
     g.fillStyle(0x1b1b2f);
-    g.fillRect(8, 4, 1, 1);
-    g.generateTexture('duck', 12, 12);
+    g.fillRect(12, 2, 1, 1);
+
+    // Diana en el centro del cuerpo.
+    g.fillStyle(0xfff1e6);
+    g.fillCircle(7, 7, 3);
+    g.fillStyle(0xe63946);
+    g.fillCircle(7, 7, 2);
+    g.fillStyle(0x9b1d2b);
+    g.fillCircle(7, 7, 1);
+
+    g.generateTexture('duck', 16, 20);
     g.clear();
 
     g.lineStyle(1, 0xffffff);
@@ -230,6 +253,17 @@ class DemoScene extends Phaser.Scene {
 
     bg.fillStyle(0x2d2b55);
     bg.fillRect(0, 10, GAME_WIDTH, 188);
+
+    // Rieles sobre los que se deslizan los patitos.
+    for (const lane of LANES) {
+      bg.fillStyle(0x5a3d29);
+      bg.fillRect(0, lane - 2, GAME_WIDTH, 5);
+      bg.fillStyle(0xc98b52);
+      bg.fillRect(0, lane - 2, GAME_WIDTH, 1);
+      bg.fillStyle(0x2a1b16);
+      bg.fillRect(0, lane + 2, GAME_WIDTH, 1);
+    }
+
     bg.fillStyle(0x6b4f8a);
     bg.fillRect(0, 198, GAME_WIDTH, 12);
     bg.fillStyle(0x3a2e4d);
