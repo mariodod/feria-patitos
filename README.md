@@ -4,7 +4,7 @@ Un *shooting gallery* de feria convertido en roguelike de barajas: eliges qué t
 
 Estética **pixel art** con resolución interna baja (480×270) escalada con vecino más cercano, interfaz de cartas y números de daño estilo *Balatro*.
 
-> **Estado: M0 completado.** Hay un scaffold funcional y una demo semilla (disparar a patitos con temporalizador y puntuación). El juego roguelike completo está en el plan más abajo.
+> **Estado: M1 completado.** Menú, puesto con 3 oleadas, cuota, patitos con patrones y dorados, y HUD con barra de progreso. La capa roguelike (cartas, tienda, reliquias) está en el M2, más abajo.
 
 ---
 
@@ -36,12 +36,12 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 
 **Puntuación de la demo:** cuerpo = 10 puntos, círculo rojo de la diana = 25 (número dorado y más sacudida). Se ajusta en `SCORING` (`src/data/levels.ts`). Si `bodyPoints` se pone a `0`, solo cuenta la diana y un impacto en el cuerpo no derriba al patito.
 
-### M1 — Núcleo de disparo
-- [ ] Escenas separadas: `BootScene`, `MenuScene`, `GameScene`, `HudScene`.
-- [ ] Patas de pato con patrones de movimiento (recto, seno, zigzag, patito dorado).
-- [ ] Sistema de oleadas y cuota de puntos por puesto; victoria/derrota por puesto.
-- [ ] HUD real: baraja restante, mano de cartas, balas, tiempo, puntos, multiplicador.
-- [ ] Sprites pixel art reales (generados por código primero, luego Aseprite).
+### M1 — Núcleo de disparo ✅ (hecho)
+- [x] Escenas separadas: `BootScene` (texturas), `MenuScene`, `GameScene` y `HudScene` (overlay que escucha eventos).
+- [x] Patitos con patrones de movimiento dentro del riel: recto, seno y zigzag; patito dorado que duplica la puntuación.
+- [x] 3 oleadas con cuota de 130 puntos: victoria, cuota no alcanzada o balas agotadas.
+- [x] HUD real: puesto, oleada, patitos restantes, balas, puntos y barra de progreso de la cuota.
+- [ ] Sprites definitivos en Aseprite (los provisionales ya se generan por código en `BootScene`).
 
 ### M2 — Capa roguelike (el corazón de la demo)
 - [ ] Baraja de **cartas de disparo**: robar 4–5 cartas por oleada, seleccionar una, disparar, descartar y recargar.
@@ -67,7 +67,7 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 
 1. **Robar** una mano de cartas de disparo del mazo.
 2. **Elegir** una carta: cada una define cómo sale el disparo (cadencia, alcance, rebotes, daño).
-3. **Apuntar y disparar** a los patitos que cruzan el puesto con balas limitadas y tiempo contado.
+3. **Apuntar y disparar** a los patitos que cruzan el puesto con balas limitadas; diana = bonus, patito dorado = el doble.
 4. **Sumar puntos**: cada patito tiene valor base; los combos, precisión y reliquias multiplican el resultado.
 5. **Cumplir la cuota** del puesto para avanzar; si no, se acaba la partida.
 6. **Comprar** en la tienda con tickets: nuevas cartas, reliquias o quitar cartas malas.

@@ -35,17 +35,18 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 | Tarea | Archivo / carpeta |
 | --- | --- |
 | Arranque y config del juego | `src/main.ts` |
-| Escenas (menú, partida, tienda, resumen) | `src/scenes/` |
+| Escenas (boot, menú, partida, HUD, tienda, resumen) | `src/scenes/` |
 | Definiciones de cartas, reliquias, puestos | `src/data/` |
 | Reglas sin motor (scoring, mazo, economía) | `src/game/logic/` |
-| Sistemas que usan Phaser (spawn, combos, audio) | `src/game/systems/` |
+| Sistemas y helpers de Phaser (texto, audio, spawn) | `src/game/systems/` |
+| Constantes de resolución y eventos entre escenas | `src/game/constants.ts`, `src/game/events.ts` |
 | Sprites, paletas, fuentes | `src/art/` |
 
 ## Cómo añadir contenido
 
 1. **Carta de disparo**: añade una entrada al catálogo de `src/data/cards.ts` con `id`, `nombre`, `coste`, `efecto` y valores. La lógica del efecto va en un sistema registrado por `id`.
 2. **Reliquia**: añade una entrada en `src/data/relics.ts` y suscribe un handler a los hooks existentes.
-3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición y la lista cerrada de patitos (`spawnAt`, carril, velocidad y dirección). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
+3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición, cuota, número de oleadas y la lista cerrada de patitos (`spawnAt`, carril, velocidad, dirección, `pattern`, `wave` y `gold`). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
 
 ## Antes de dar algo por terminado
 
