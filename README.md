@@ -52,7 +52,7 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con la esco
 - [x] **Cartuchos especiales** en 4 ranuras (teclas 1–4 o clic): precisión, escopeta, rebote y congelar. Se consumen al usarlos.
 - [x] **8 mejoras permanentes** del arma y del puesto con hooks (`onHit`, `onStallStart`).
 - [x] Dólares con multiplicadores de cartucho, bonus por diana, patito dorado y mejoras; números flotantes y sacudida.
-- [x] Tienda entre puestos: comprar mejoras y cartuchos con dólares; se retira la oferta comprada y el cursor vuelve a verse.
+- [x] Tienda entre puestos: comprar mejoras y cartuchos con dólares; las ofertas se quedan (marcadas como VENDIDO) y solo cambian al pagar $15 por refrescar. La mira es la misma que en el puesto.
 - [x] Bucle de partida: 3 puestos → tienda entre ellos → pantalla de resumen → menú.
 
 ### M3 — Juice y cierre de demo ✅ (hecho)
@@ -94,7 +94,7 @@ npm run preview  # sirve dist/ localmente
 - **Mover el ratón**: mira.
 - **Clic izquierdo sobre el puesto**: disparar con la escopeta base.
 - **Teclas 1–4 o clic en una ranura**: seleccionar un cartucho especial (si lo tienes); vuelve a pulsar para volver a la escopeta.
-- **Clic en la tienda**: comprar mejoras/cartuchos o ir al mapa.
+- **Clic en la tienda**: comprar mejoras/cartuchos, refrescar ofertas ($15) o ir al mapa.
 - **Clic en el mapa**: elegir el tipo de siguiente puesto.
 - **Clic en el resumen**: volver al menú.
 

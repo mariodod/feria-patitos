@@ -28,7 +28,8 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 - **Hooks de mejoras** (`onHit`, `onStallStart` en `src/data/upgrades.ts`). No cablees mejoras concretas dentro de las clases de juego.
 - **Moneda**: la puntuación son dólares (`run.dollars` en `src/game/runState.ts`) y se gastan en la tienda. El HUD **no** debe mostrar la oleada ni cuántos patitos quedan: es información oculta a propósito.
 - **State por partida vs meta**: `run` se reinicia con `resetRun()` al empezar cada partida: mejoras, cartuchos, dólares y nodo se pierden. Solo `src/game/meta.ts` persiste (en `localStorage`) y únicamente guarda desbloqueos y dólares totales acumulados para umbrales. Nunca guardes mejoras de una partida.
-- **Cursor**: `GameScene` oculta el cursor (mira propia); el resto de escenas debe dejarlo visible (`setDefaultCursor('auto')`).
+- **Cursor**: `GameScene` y `ShopScene` ocultan el cursor y muestran la mira (`crosshair`); menú, mapa y resumen dejan el cursor visible (`auto`).
+- **Tienda**: las ofertas se conservan entre compras (se marcan `VENDIDO`); solo se regeneran al pagar `SHOP_REFRESH_PRICE`. No llames a `scene.restart()` para reflejar una compra: vuelve a dibujar con `render()`.
 - **Assets provisionales**: hasta M3 los sprites se generan con `Graphics.generateTexture()` en `BootScene`. Eso permite que la demo funcione sin archivos de imagen. Los assets definitivos van en `src/art/` con paleta reducida.
 - **Idioma**: código y mensajes de commit en inglés; documentación y textos de juego en español.
 - **Git/GitHub**: usa `gh` para cualquier operación de GitHub (issues, PRs, Pages). Rama principal `main`. No commitees `node_modules/`, `dist/` ni archivos `.local`.

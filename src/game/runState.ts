@@ -21,13 +21,22 @@ export function resetRun(): void {
   Object.assign(run, createRun());
 }
 
-/** Ofertas de la tienda; se regeneran al entrar en cada tienda. */
-export const shop: { upgrades: string[]; shell: ShellId | null } = {
+/** Ofertas de la tienda; se conservan entre compras y solo cambian al refrescar. */
+export const shop: {
+  upgrades: (string | null)[];
+  shell: ShellId | null;
+  shellSold: boolean;
+  ready: boolean;
+} = {
   upgrades: [],
   shell: null,
+  shellSold: false,
+  ready: false,
 };
 
 export function prepareShop(): void {
   shop.upgrades = [];
   shop.shell = null;
+  shop.shellSold = false;
+  shop.ready = false;
 }
