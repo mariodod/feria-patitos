@@ -13,6 +13,8 @@ export interface Shell {
   extraTargets: number;
   /** Segundos de ralentización al disparar. */
   slow: number;
+  /** Daño extra sobre el daño base del arma. */
+  damage: number;
   price: number;
   hex: string;
 }
@@ -34,6 +36,7 @@ export const SHELLS: Record<ShellId, Shell> = {
     ammoCost: 1,
     extraTargets: 0,
     slow: 0,
+    damage: 1,
     price: 35,
     hex: '#ffd166',
   },
@@ -46,6 +49,7 @@ export const SHELLS: Record<ShellId, Shell> = {
     ammoCost: 2,
     extraTargets: 0,
     slow: 0,
+    damage: 0,
     price: 30,
     hex: '#ff8f6b',
   },
@@ -58,6 +62,7 @@ export const SHELLS: Record<ShellId, Shell> = {
     ammoCost: 1,
     extraTargets: 1,
     slow: 0,
+    damage: 0,
     price: 40,
     hex: '#8be9fd',
   },
@@ -70,6 +75,7 @@ export const SHELLS: Record<ShellId, Shell> = {
     ammoCost: 1,
     extraTargets: 0,
     slow: 2.5,
+    damage: 0,
     price: 35,
     hex: '#b39cff',
   },

@@ -5,6 +5,8 @@ export interface HitContext {
   aimRadius: number;
   extraTargets: number;
   slowOnHit: number;
+  /** Daño por impacto; 1 por defecto. */
+  damage: number;
 }
 
 export interface Upgrade {
@@ -73,6 +75,20 @@ export const UPGRADES: Record<string, Upgrade> = {
     description: '+$10 por patito dorado',
     price: 45,
     onHit: (ctx) => ({ ...ctx, dollars: ctx.dollars + (ctx.gold ? 10 : 0) }),
+  },
+  perforante: {
+    id: 'perforante',
+    name: 'PERFORANTE',
+    description: '+1 de daño por disparo',
+    price: 55,
+    onHit: (ctx) => ({ ...ctx, damage: ctx.damage + 1 }),
+  },
+  martillo: {
+    id: 'martillo',
+    name: 'MARTILLO',
+    description: '+2 de daño por disparo',
+    price: 80,
+    onHit: (ctx) => ({ ...ctx, damage: ctx.damage + 2 }),
   },
 };
 

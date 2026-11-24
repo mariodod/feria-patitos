@@ -4,7 +4,7 @@ Un *shooting gallery* de feria convertido en roguelike: disparas con una escopet
 
 Estética **pixel art** con resolución interna baja (480×270) escalada con vecino más cercano y números de dinero estilo *Balatro*.
 
-> **Estado: M3 completado — demo jugable.** Partida de 3 puestos con escopeta, cartuchos, mejoras, mapa de nodos, tienda, sonido y dólares. Jugar online: **https://mariodod.github.io/feria-patitos/**.
+> **Estado: M4 en curso.** Demo jugable de 5 puestos con escopeta, cartuchos, mejoras, mapa, tienda y sonido; ya hay patitos de metal y un Pato Rey gigante con barra de vida. Jugar online: **https://mariodod.github.io/feria-patitos/**.
 
 **Las mejoras y los cartuchos no se guardan entre partidas**: cada partida empieza con la escopeta base y sin mejoras. Solo persisten los desbloqueos de contenido en `localStorage`, que es lo que hace que cada *run* sea distinto.
 
@@ -62,6 +62,12 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con la esco
 - [x] Balance: cuotas 100/130/160 $ y munición suficiente para ganar la primera partida con la escopeta base.
 - [x] Publicación en GitHub Pages mediante `.github/workflows/deploy.yml`.
 
+### M4 — Jefes y blindados (en curso)
+- [x] Partida ampliada a **5 puestos**; los dos últimos introducen patitos de metal (2–3 impactos).
+- [x] **Pato Rey**: patito gigante (escala 5) con 12 vidas, barra de vida en el HUD y recompensa ×5.
+- [x] **Mejoras de daño**: Perforante (+1) y Martillo (+2) permiten derribar blindados de un solo disparo y dañar más al jefe. El cartucho Precisión también suma +1 de daño.
+- [ ] Balance de los nuevos puestos, más tipos de jefe y más mejoras de disparo.
+
 ### Definición de «demo jugable»
 `npm install && npm run dev` → menú → partida de 3 puestos con mapa, escopeta, cartuchos y tienda → pantalla final → menú. Sin errores en consola y `npm run build` pasa. También jugable en https://mariodod.github.io/feria-patitos/.
 
@@ -72,7 +78,7 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con la esco
 1. **Disparar** con la escopeta base (clic) o elegir un cartucho especial con las teclas 1–4.
 2. **Cada cartucho** cambia el disparo: mira más pequeña, más ancha, dos patitos o ralentización. Se consume al usarlo.
 3. **Apuntar a los patitos** con balas limitadas; diana = bonus, patito dorado = el doble.
-4. **Ganar dólares**: cada patito tiene valor base; la precisión, los cartuchos y las mejoras lo multiplican.
+4. **Ganar dólares**: cada patito tiene valor base; la precisión, los cartuchos y las mejoras lo multiplican. Los blindados y el jefe pagan más, pero aguantan varios impactos.
 5. **Cumplir la cuota** del puesto para avanzar; si no, se acaba la partida.
 6. **Comprar** en la tienda con los dólares ganados: mejoras permanentes (durante la partida) y cartuchos nuevos.
 7. **Elegir nodo** en el mapa: puesto clásico, rápido o misterioso.

@@ -15,7 +15,9 @@ export class HudScene extends Phaser.Scene {
   private dollarsText!: Phaser.GameObjects.Text;
   private ammoText!: Phaser.GameObjects.Text;
   private weaponText!: Phaser.GameObjects.Text;
+  private bossText!: Phaser.GameObjects.Text;
   private bar!: Phaser.GameObjects.Graphics;
+  private bossBar!: Phaser.GameObjects.Graphics;
   private slotBg: Phaser.GameObjects.Graphics[] = [];
   private slotName: Phaser.GameObjects.Text[] = [];
   private slotCost: Phaser.GameObjects.Text[] = [];
@@ -32,8 +34,10 @@ export class HudScene extends Phaser.Scene {
     this.levelText = pixelText(this, 8, 6, '', 10);
     this.dollarsText = pixelText(this, GAME_WIDTH / 2, 6, '', 10, '#ffd166').setOrigin(0.5, 0);
     this.ammoText = pixelText(this, GAME_WIDTH - 8, 6, '', 10).setOrigin(1, 0);
-    this.weaponText = pixelText(this, 8, 216, '', 8, '#8be9fd');
+    this.weaponText = pixelText(this, 8, 20, '', 8, '#8be9fd');
+    this.bossText = pixelText(this, 8, 208, '', 8, '#ff9f1c');
     this.bar = this.add.graphics();
+    this.bossBar = this.add.graphics();
 
     for (let i = 0; i < 4; i += 1) {
       const x = CARD_X + i * CARD_STEP;
@@ -74,6 +78,19 @@ export class HudScene extends Phaser.Scene {
     this.bar.fillRect(8, 18, width, 5);
     this.bar.fillStyle(pct >= 1 ? 0x6bd68a : 0xff5d73);
     this.bar.fillRect(9, 19, (width - 2) * pct, 3);
+
+    if (!state.boss) {
+      this.bossText.setText('');
+      this.bossBar.clear();
+    } else {
+      this.bossText.setText(`${state.boss.name}  ${state.boss.hp}/${state.boss.maxHp}`);
+      const bossPct = Phaser.Math.Clamp(state.boss.hp / state.boss.maxHp, 0, 1);
+      this.bossBar.clear();
+      this.bossBar.fillStyle(0x000000, 0.6);
+      this.bossBar.fillRect(8, 216, 200, 5);
+      this.bossBar.fillStyle(0xff9f1c);
+      this.bossBar.fillRect(9, 217, 198 * bossPct, 3);
+    }
 
     for (let i = 0; i < 4; i += 1) {
       const shell = state.shells[i];

@@ -28,6 +28,7 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 - **Hooks de mejoras** (`onHit`, `onStallStart` en `src/data/upgrades.ts`). No cablees mejoras concretas dentro de las clases de juego.
 - **Moneda**: la puntuación son dólares (`run.dollars` en `src/game/runState.ts`) y se gastan en la tienda. El HUD **no** debe mostrar la oleada ni cuántos patitos quedan: es información oculta a propósito.
 - **State por partida vs meta**: `run` se reinicia con `resetRun()` al empezar cada partida: mejoras, cartuchos, dólares y nodo se pierden. Solo `src/game/meta.ts` persiste (en `localStorage`) y únicamente guarda desbloqueos y dólares totales acumulados para umbrales. Nunca guardes mejoras de una partida.
+- **Vida y daño**: los patitos pueden tener `hp` > 1 (metal, jefe). El daño base es 1 y se incrementa con hooks `onHit` de mejoras y con el campo `damage` del cartucho. Nunca asumas que un impacto derriba al patito: comprueba `hp` y muestra el feedback visual de daño parcial.
 - **Cursor**: `GameScene` y `ShopScene` ocultan el cursor y muestran la mira (`crosshair`); menú, mapa y resumen dejan el cursor visible (`auto`).
 - **Tienda**: las ofertas se conservan entre compras (se marcan `VENDIDO`); solo se regeneran al pagar `SHOP_REFRESH_PRICE`. No llames a `scene.restart()` para reflejar una compra: vuelve a dibujar con `render()`. Las zonas interactivas y la mira se crean **una sola vez** en `create()`; `render()` solo actualiza textos y fondos, porque destruir zonas en Phaser 4 deja handlers vivos en el input.
 - **Assets provisionales**: hasta M3 los sprites se generan con `Graphics.generateTexture()` en `BootScene`. Eso permite que la demo funcione sin archivos de imagen. Los assets definitivos van en `src/art/` con paleta reducida.
@@ -51,7 +52,7 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 
 1. **Cartucho especial**: añade una entrada en `src/data/shells.ts` con `radius`, `multiplier`, `ammoCost`, `extraTargets`, `slow`, `price` y `hex`. Se consume al disparar y no se posee al empezar.
 2. **Mejora**: añade una entrada en `src/data/upgrades.ts` con `price` y los hooks `onHit` y/o `onStallStart` que necesite. Es permanente durante la partida.
-3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición, cuota, número de oleadas y la lista cerrada de patitos (`spawnAt`, carril, velocidad, dirección, `pattern`, `wave` y `gold`). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
+3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición, cuota, oleadas y la lista cerrada de patitos (`spawnAt`, carril, velocidad, dirección, `pattern`, `wave`, `gold`, `hp`, `scale`, `metal`, `boss` y `life`). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
 
 ## Antes de dar algo por terminado
 

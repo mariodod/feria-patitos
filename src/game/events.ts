@@ -18,4 +18,6 @@ export interface HudState {
   shells: (ShellView | null)[];
   /** -1 = escopeta base, 0..3 = cartucho seleccionado. */
   selected: number;
+  /** Barra de vida del jefe mientras siga en pantalla. */
+  boss: { name: string; hp: number; maxHp: number } | null;
 }

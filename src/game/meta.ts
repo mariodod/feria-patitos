@@ -12,6 +12,8 @@ const UNLOCKS = [
   { id: 'canon', at: 150 },
   { id: 'freeze', at: 250 },
   { id: 'dianaOro', at: 400 },
+  { id: 'perforante', at: 600 },
+  { id: 'martillo', at: 1000 },
 ];
 
 export function loadMeta(): MetaState {

@@ -17,7 +17,7 @@ import {
   type ShellView,
 } from '../game/events';
 import { applyStallKind, isLevelComplete } from '../game/logic/level';
-import { scoreHit } from '../game/logic/scoring';
+import { scoreHit, type DuckKind } from '../game/logic/scoring';
 import { prepareShop, run } from '../game/runState';
 import { sfx } from '../game/systems/audio';
 import { pixelTextStyle } from '../game/systems/text';
@@ -28,6 +28,12 @@ interface Duck {
   direction: 1 | -1;
   pattern: DuckPattern;
   gold: boolean;
+  metal: boolean;
+  boss: boolean;
+  hp: number;
+  maxHp: number;
+  scale: number;
+  life: number;
   age: number;
 }
 
@@ -119,7 +125,7 @@ export class GameScene extends Phaser.Scene {
 
       const outside =
         duck.sprite.x < -DUCK_HALF_WIDTH || duck.sprite.x > GAME_WIDTH + DUCK_HALF_WIDTH;
-      if (outside || duck.age >= DUCK_LIFETIME) {
+      if (outside || duck.age >= duck.life) {
         duck.sprite.destroy();
         this.ducks.splice(i, 1);
       }
@@ -139,10 +145,16 @@ export class GameScene extends Phaser.Scene {
 
   private spawnDuck(spawn: DuckSpawn): void {
     const startX = spawn.direction === 1 ? -DUCK_HALF_WIDTH : GAME_WIDTH + DUCK_HALF_WIDTH;
-    const sprite = this.add
-      .image(startX, LANES[spawn.lane], spawn.gold ? 'duck-gold' : 'duck')
-      .setOrigin(0.5, 1)
-      .setScale(2);
+    const scale = spawn.scale ?? 2;
+    const texture = spawn.boss
+      ? 'duck-boss'
+      : spawn.metal
+        ? 'duck-metal'
+        : spawn.gold
+          ? 'duck-gold'
+          : 'duck';
+    const sprite = this.add.image(startX, LANES[spawn.lane], texture).setOrigin(0.5, 1).setScale(scale);
+    const hp = spawn.hp ?? 1;
 
     this.ducks.push({
       sprite,
@@ -150,6 +162,12 @@ export class GameScene extends Phaser.Scene {
       direction: spawn.direction,
       pattern: spawn.pattern,
       gold: spawn.gold ?? false,
+      metal: spawn.metal ?? false,
+      boss: spawn.boss ?? false,
+      hp,
+      maxHp: hp,
+      scale,
+      life: spawn.life ?? DUCK_LIFETIME,
       age: 0,
     });
   }
@@ -172,6 +190,7 @@ export class GameScene extends Phaser.Scene {
       aimRadius: SHOTGUN.radius,
       extraTargets: 0,
       slowOnHit: 0,
+      damage: 1,
     });
 
     const shellId: ShellId | undefined = run.shells[this.selectedShell];
@@ -186,18 +205,23 @@ export class GameScene extends Phaser.Scene {
     this.ammo -= cost;
     sfx.shoot();
 
-    const radius = shell ? shell.radius + (shot.aimRadius - SHOTGUN.radius) : shot.aimRadius;
+    const damage = shot.damage + (shell?.damage ?? 0);
     const maxTargets = 1 + shot.extraTargets + (shell?.extraTargets ?? 0);
     const slow = shot.slowOnHit + (shell?.slow ?? 0);
-    const multiplier = shell?.multiplier ?? SHOTGUN.multiplier;
+    const aimRadius = shell?.radius ?? shot.aimRadius;
 
     const targets = this.ducks
-      .map((duck, index) => ({
-        duck,
-        index,
-        distance: Phaser.Math.Distance.Between(x, y, duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y),
-      }))
-      .filter((target) => target.distance <= radius)
+      .map((duck, index) => {
+        const size = duck.scale / 2;
+        const distance = Phaser.Math.Distance.Between(
+          x,
+          y,
+          duck.sprite.x,
+          duck.sprite.y - BODY_OFFSET_Y * size,
+        );
+        return { duck, index, distance, size };
+      })
+      .filter((target) => target.distance <= aimRadius * target.size)
       .sort((a, b) => b.duck.sprite.depth - a.duck.sprite.depth || b.index - a.index)
       .slice(0, maxTargets);
 
@@ -206,36 +230,49 @@ export class GameScene extends Phaser.Scene {
 
     for (const target of targets) {
       const duck = target.duck;
+      const size = target.size;
       const bullseye =
         Phaser.Math.Distance.Between(
           x,
           y,
-          duck.sprite.x + BULLSEYE_OFFSET_X,
-          duck.sprite.y - BODY_OFFSET_Y,
-        ) <= SCORING.bullseyeRadius;
+          duck.sprite.x + BULLSEYE_OFFSET_X * size,
+          duck.sprite.y - BODY_OFFSET_Y * size,
+        ) <= SCORING.bullseyeRadius * size;
 
+      const kind: DuckKind = duck.boss ? 'boss' : duck.metal ? 'metal' : 'normal';
       const hit = this.applyHooks({
-        dollars: scoreHit(bullseye, duck.gold) * multiplier,
+        dollars: scoreHit(bullseye, duck.gold, kind),
         bullseye,
         gold: duck.gold,
         aimRadius: 0,
         extraTargets: 0,
         slowOnHit: 0,
+        damage: 0,
       });
-      const dollars = Math.round(hit.dollars);
 
+      const willDie = duck.hp <= damage;
+      const dollars = Math.round(willDie ? hit.dollars : hit.dollars / 2);
       this.earned += dollars;
       run.dollars += dollars;
-      this.popScore(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y, dollars, bullseye);
-      this.spark(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y);
+      this.popScore(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y * size, dollars, bullseye);
+      this.spark(duck.sprite.x, duck.sprite.y - BODY_OFFSET_Y * size);
       if (bullseye) sfx.bullseye();
       else sfx.hit();
-      duck.sprite.destroy();
+
+      duck.hp -= damage;
+      if (duck.hp <= 0) {
+        duck.sprite.destroy();
+      } else {
+        duck.sprite.setTint(0xffffff);
+        this.time.delayedCall(90, () => {
+          if (duck.hp > 0) duck.sprite.clearTint();
+        });
+      }
     }
 
-    if (targets.length > 0) {
-      const hitDucks = new Set(targets.map((target) => target.duck));
-      this.ducks = this.ducks.filter((duck) => !hitDucks.has(duck));
+    const dead = new Set(targets.filter((target) => target.duck.hp <= 0).map((target) => target.duck));
+    if (dead.size > 0) {
+      this.ducks = this.ducks.filter((duck) => !dead.has(duck));
       this.cameras.main.shake(60, 0.004);
     }
 
@@ -329,6 +366,7 @@ export class GameScene extends Phaser.Scene {
       );
     }
 
+    const bossDuck = this.ducks.find((duck) => duck.boss);
     const state: HudState = {
       levelName: this.level.name,
       earned: this.earned,
@@ -337,6 +375,9 @@ export class GameScene extends Phaser.Scene {
       ammoMax: this.ammoMax,
       shells,
       selected: this.selectedShell,
+      boss: bossDuck
+        ? { name: this.level.bossName ?? 'JEFE', hp: bossDuck.hp, maxHp: bossDuck.maxHp }
+        : null,
     };
     this.game.events.emit(HUD_STATE_EVENT, state);
   }
