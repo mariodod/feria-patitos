@@ -6,6 +6,7 @@ interface DuckColors {
   body: number;
   wing: number;
   beak: number;
+  sparkle?: boolean;
 }
 
 /** Generates every texture in code so the demo needs no image files. */
@@ -15,8 +16,13 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.makeDuckTexture('duck', { body: 0xf4d35e, wing: 0xffe9a8, beak: 0xef6f6c });
-    this.makeDuckTexture('duck-gold', { body: 0xffc300, wing: 0xffe57a, beak: 0xe05a3c });
+    this.makeDuckTexture('duck', { body: 0xe9f2dc, wing: 0xf7fbf0, beak: 0xef6f6c });
+    this.makeDuckTexture('duck-gold', {
+      body: 0xff9f1c,
+      wing: 0xffd166,
+      beak: 0xb5372a,
+      sparkle: true,
+    });
     this.makeCrosshair();
     this.makeSpark();
     this.makeBackdrop();
@@ -41,6 +47,12 @@ export class BootScene extends Phaser.Scene {
     g.fillRect(14, 3, 2, 2);
     g.fillStyle(0x1b1b2f);
     g.fillRect(12, 2, 1, 1);
+
+    if (colors.sparkle) {
+      g.fillStyle(0xfff3a8);
+      g.fillRect(10, 2, 1, 1);
+      g.fillRect(11, 1, 1, 1);
+    }
 
     g.fillStyle(0xfff1e6);
     g.fillCircle(7, 7, 3);
