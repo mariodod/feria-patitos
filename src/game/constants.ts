@@ -6,3 +6,10 @@ export const BODY_OFFSET_Y = 26;
 export const BULLSEYE_OFFSET_X = -2;
 /** Un patito que nadie dispara acaba saliendo (o agotando su tiempo). */
 export const DUCK_LIFETIME = 16;
+
+export const HAND_SIZE = 4;
+export const CARD_W = 108;
+export const CARD_H = 38;
+export const CARD_X = 12;
+export const CARD_Y = 224;
+export const CARD_STEP = 116;

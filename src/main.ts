@@ -4,6 +4,8 @@ import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { HudScene } from './scenes/HudScene';
 import { MenuScene } from './scenes/MenuScene';
+import { ShopScene } from './scenes/ShopScene';
+import { SummaryScene } from './scenes/SummaryScene';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -17,5 +19,5 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, GameScene, HudScene],
+  scene: [BootScene, MenuScene, GameScene, HudScene, ShopScene, SummaryScene],
 });

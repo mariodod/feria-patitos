@@ -60,3 +60,32 @@ export const LEVEL_1: LevelDefinition = {
     { spawnAt: 8300, lane: 2, speed: 52, direction: -1, pattern: 'straight', wave: 3 },
   ],
 };
+
+/** Los tres puestos de una partida. Cada uno es más rápido y exige más dólares. */
+export const LEVELS: LevelDefinition[] = [
+  LEVEL_1,
+  {
+    ...LEVEL_1,
+    id: 'puesto-2',
+    name: 'PUESTO 2 · PATITOS',
+    quota: 160,
+    ducks: LEVEL_1.ducks.map((duck, i) => ({
+      ...duck,
+      spawnAt: Math.max(200, duck.spawnAt - 300),
+      speed: duck.speed + 5,
+      gold: i === 2 || i === 7,
+    })),
+  },
+  {
+    ...LEVEL_1,
+    id: 'puesto-3',
+    name: 'PUESTO 3 · PATITOS',
+    quota: 190,
+    ducks: LEVEL_1.ducks.map((duck, i) => ({
+      ...duck,
+      spawnAt: Math.max(150, duck.spawnAt - 500),
+      speed: duck.speed + 9,
+      gold: i === 4 || i === 10,
+    })),
+  },
+];

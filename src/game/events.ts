@@ -1,13 +1,20 @@
 export const HUD_STATE_EVENT = 'hud:state';
+export const SELECT_CARD_EVENT = 'select:card';
+
+export interface CardView {
+  id: string;
+  name: string;
+  cost: number;
+  color: string;
+  selected: boolean;
+  affordable: boolean;
+}
 
 export interface HudState {
   levelName: string;
-  score: number;
+  earned: number;
   quota: number;
   ammo: number;
   ammoMax: number;
-  ducksRemaining: number;
-  ducksTotal: number;
-  wave: number;
-  waves: number;
+  hand: CardView[];
 }

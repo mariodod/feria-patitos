@@ -24,7 +24,8 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 - **Posiciones enteras** en sprites (`setPosition(Math.round(x), Math.round(y))`) para evitar bordes borrosos.
 - **Contenido data-driven**: cartas, reliquias y puestos se definen en `src/data/`, nunca como condicionales dentro del bucle de juego. Añadir una carta debe ser añadir un objeto de datos, no editar la lógica.
 - **Lógica pura separada**: reglas de puntuación, baraja y economía van en `src/game/logic/` y no importan Phaser. Los sistemas de Phaser (`src/game/systems/`) solo orquestan.
-- **Hooks de reliquias** vía eventos (`onHit`, `onKill`, `onWaveEnd`, etc.). No cablees reliquias concretas dentro de las clases de juego.
+- **Hooks de reliquias** (`onHit`, `onStallStart` en `src/data/relics.ts`). No cablees reliquias concretas dentro de las clases de juego.
+- **Moneda**: la puntuación son dólares (`run.dollars` en `src/game/runState.ts`) y se gastan en la tienda. El HUD **no** debe mostrar la oleada ni cuántos patitos quedan: es información oculta a propósito.
 - **Assets provisionales**: hasta M3 los sprites se generan con `Graphics.generateTexture()` en `BootScene`. Eso permite que la demo funcione sin archivos de imagen. Los assets definitivos van en `src/art/` con paleta reducida.
 - **Idioma**: código y mensajes de commit en inglés; documentación y textos de juego en español.
 - **Git/GitHub**: usa `gh` para cualquier operación de GitHub (issues, PRs, Pages). Rama principal `main`. No commitees `node_modules/`, `dist/` ni archivos `.local`.
@@ -45,7 +46,7 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 ## Cómo añadir contenido
 
 1. **Carta de disparo**: añade una entrada al catálogo de `src/data/cards.ts` con `id`, `nombre`, `coste`, `efecto` y valores. La lógica del efecto va en un sistema registrado por `id`.
-2. **Reliquia**: añade una entrada en `src/data/relics.ts` y suscribe un handler a los hooks existentes.
+2. **Reliquia**: añade una entrada en `src/data/relics.ts` con `price` y los hooks `onHit` y/o `onStallStart` que necesite.
 3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición, cuota, número de oleadas y la lista cerrada de patitos (`spawnAt`, carril, velocidad, dirección, `pattern`, `wave` y `gold`). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
 
 ## Antes de dar algo por terminado

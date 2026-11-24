@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants';
+import { resetRun } from '../game/runState';
 import { pixelText } from '../game/systems/text';
 
 export class MenuScene extends Phaser.Scene {
@@ -16,7 +17,7 @@ export class MenuScene extends Phaser.Scene {
       this,
       GAME_WIDTH / 2,
       126,
-      'Dispara a los patitos que pasan por los rieles.\nCuerpo 10 pts · Diana roja 25 pts · Dorado el doble',
+      'Elige una carta (1-4 o clic) y dispara.\nCuerpo $10 · Diana $25 · Dorado el doble',
       10,
     )
       .setOrigin(0.5)
@@ -26,6 +27,7 @@ export class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: prompt, alpha: 0.3, yoyo: true, repeat: -1, duration: 650 });
 
     this.input.once('pointerdown', () => {
+      resetRun();
       this.scene.start('game');
       this.scene.launch('hud');
     });
