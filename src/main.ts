@@ -126,11 +126,20 @@ class DemoScene extends Phaser.Scene {
     }
     this.ammo -= 1;
 
-    const index = this.ducks.findIndex((duck) => {
+    // En empate de profundidad gana el añadido más reciente: es el que se dibuja encima.
+    let index = -1;
+    let frontDepth = -Infinity;
+    for (let i = 0; i < this.ducks.length; i += 1) {
+      const duck = this.ducks[i];
       const cx = duck.sprite.x;
       const cy = duck.sprite.y - HIT_OFFSET_Y;
-      return Phaser.Math.Distance.Between(x, y, cx, cy) <= 13;
-    });
+      const hit = Phaser.Math.Distance.Between(x, y, cx, cy) <= 13;
+
+      if (hit && duck.sprite.depth >= frontDepth) {
+        index = i;
+        frontDepth = duck.sprite.depth;
+      }
+    }
 
     if (index !== -1) {
       const duck = this.ducks.splice(index, 1)[0];
