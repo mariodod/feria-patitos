@@ -1,13 +1,11 @@
 import Phaser from 'phaser';
+import { LANES, LEVEL_1, type DuckSpawn } from './data/levels';
 
 export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 270;
 
-const LANES = [70, 120, 170];
 const DUCK_HALF_WIDTH = 16;
 const HIT_OFFSET_Y = 26;
-const ROUND_SECONDS = 30;
-const START_AMMO = 30;
 
 interface Duck {
   sprite: Phaser.GameObjects.Image;
@@ -21,13 +19,13 @@ class DemoScene extends Phaser.Scene {
   private crosshair!: Phaser.GameObjects.Image;
   private scoreText!: Phaser.GameObjects.Text;
   private ammoText!: Phaser.GameObjects.Text;
-  private timeText!: Phaser.GameObjects.Text;
+  private duckText!: Phaser.GameObjects.Text;
   private centerText!: Phaser.GameObjects.Text;
 
   private score = 0;
-  private ammo = START_AMMO;
-  private timeLeft = ROUND_SECONDS;
-  private spawnTimer = 0;
+  private ammo = LEVEL_1.ammo;
+  private elapsed = 0;
+  private nextSpawn = 0;
   private running = true;
 
   constructor() {
@@ -37,9 +35,9 @@ class DemoScene extends Phaser.Scene {
   create(): void {
     this.ducks = [];
     this.score = 0;
-    this.ammo = START_AMMO;
-    this.timeLeft = ROUND_SECONDS;
-    this.spawnTimer = 0;
+    this.ammo = LEVEL_1.ammo;
+    this.elapsed = 0;
+    this.nextSpawn = 0;
     this.running = true;
 
     this.createTextures();
@@ -49,7 +47,7 @@ class DemoScene extends Phaser.Scene {
     this.crosshair = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'crosshair').setDepth(100);
     this.scoreText = this.add.text(8, 6, '', this.textStyle()).setDepth(50);
     this.ammoText = this.add.text(GAME_WIDTH - 8, 6, '', this.textStyle()).setOrigin(1, 0).setDepth(50);
-    this.timeText = this.add.text(GAME_WIDTH / 2, 6, '', this.textStyle()).setOrigin(0.5, 0).setDepth(50);
+    this.duckText = this.add.text(GAME_WIDTH / 2, 6, '', this.textStyle()).setOrigin(0.5, 0).setDepth(50);
     this.centerText = this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', this.textStyle(14))
       .setOrigin(0.5)
@@ -67,53 +65,47 @@ class DemoScene extends Phaser.Scene {
       this.fire(pointer.worldX, pointer.worldY);
     });
 
-    this.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: () => {
-        if (!this.running) return;
-        this.timeLeft -= 1;
-        if (this.timeLeft <= 0) this.endRound();
-        this.updateHud();
-      },
-    });
-
     this.updateHud();
   }
 
   update(_time: number, delta: number): void {
     if (!this.running) return;
 
-    this.spawnTimer += delta;
-    if (this.spawnTimer >= 550 && this.ducks.length < 6) {
-      this.spawnTimer = 0;
-      this.spawnDuck();
+    this.elapsed += delta;
+    while (
+      this.nextSpawn < LEVEL_1.ducks.length &&
+      this.elapsed >= LEVEL_1.ducks[this.nextSpawn].spawnAt
+    ) {
+      this.spawnDuck(LEVEL_1.ducks[this.nextSpawn]);
+      this.nextSpawn += 1;
     }
 
     const dt = delta / 1000;
-    for (const duck of this.ducks) {
+    for (let i = this.ducks.length - 1; i >= 0; i -= 1) {
+      const duck = this.ducks[i];
       duck.sprite.x += duck.vx * dt;
-
-      if (duck.sprite.x < DUCK_HALF_WIDTH || duck.sprite.x > GAME_WIDTH - DUCK_HALF_WIDTH) {
-        duck.vx *= -1;
-        duck.sprite.x = Phaser.Math.Clamp(
-          duck.sprite.x,
-          DUCK_HALF_WIDTH,
-          GAME_WIDTH - DUCK_HALF_WIDTH,
-        );
-      }
       duck.sprite.setFlipX(duck.vx < 0);
+
+      // Si nadie lo dispara, sale del riel y cuenta como fallo.
+      if (duck.sprite.x < -DUCK_HALF_WIDTH || duck.sprite.x > GAME_WIDTH + DUCK_HALF_WIDTH) {
+        duck.sprite.destroy();
+        this.ducks.splice(i, 1);
+      }
     }
+
+    this.checkLevelEnd();
+    this.updateHud();
   }
 
-  private spawnDuck(): void {
+  private spawnDuck(spawn: DuckSpawn): void {
+    const startX = spawn.direction === 1 ? -DUCK_HALF_WIDTH : GAME_WIDTH + DUCK_HALF_WIDTH;
     const sprite = this.add
-      .image(Phaser.Math.Between(20, GAME_WIDTH - 20), Phaser.Math.RND.pick(LANES), 'duck')
+      .image(startX, LANES[spawn.lane], 'duck')
       .setOrigin(0.5, 1)
       .setScale(2);
     const duck: Duck = {
       sprite,
-      vx: Phaser.Math.Between(25, 55) * (Phaser.Math.Between(0, 1) ? 1 : -1),
+      vx: spawn.speed * spawn.direction,
       points: 10,
     };
     this.ducks.push(duck);
@@ -121,7 +113,7 @@ class DemoScene extends Phaser.Scene {
 
   private fire(x: number, y: number): void {
     if (this.ammo <= 0) {
-      this.endRound();
+      this.endRound(false);
       return;
     }
     this.ammo -= 1;
@@ -152,7 +144,14 @@ class DemoScene extends Phaser.Scene {
       this.cameras.main.shake(60, 0.004);
     }
 
+    this.checkLevelEnd();
     this.updateHud();
+  }
+
+  private checkLevelEnd(): void {
+    if (this.nextSpawn >= LEVEL_1.ducks.length && this.ducks.length === 0) {
+      this.endRound(true);
+    }
   }
 
   private popScore(x: number, y: number, points: number): void {
@@ -184,17 +183,17 @@ class DemoScene extends Phaser.Scene {
     }
   }
 
-  private endRound(): void {
+  private endRound(cleared: boolean): void {
     this.running = false;
-    this.centerText.setText(
-      `FIN DEL PUESTO\n${this.score} PUNTOS\nCLIC PARA REPETIR`,
-    );
+    const result = cleared ? 'PUESTO SUPERADO' : 'SE ACABARON LAS BALAS';
+    this.centerText.setText(`${result}\n${this.score} PUNTOS\nCLIC PARA REPETIR`);
   }
 
   private updateHud(): void {
+    const remaining = LEVEL_1.ducks.length - this.nextSpawn + this.ducks.length;
     this.scoreText.setText(`PUNTOS ${this.score}`);
     this.ammoText.setText(`BALAS ${this.ammo}`);
-    this.timeText.setText(`${this.timeLeft}s`);
+    this.duckText.setText(`PATITOS ${remaining}`);
   }
 
   private textStyle(size = 10): Phaser.Types.GameObjects.Text.TextStyle {

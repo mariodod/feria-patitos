@@ -45,7 +45,7 @@ No hay tests aún. Cuando se añadan, la lógica pura debe ser testeable sin Pha
 
 1. **Carta de disparo**: añade una entrada al catálogo de `src/data/cards.ts` con `id`, `nombre`, `coste`, `efecto` y valores. La lógica del efecto va en un sistema registrado por `id`.
 2. **Reliquia**: añade una entrada en `src/data/relics.ts` y suscribe un handler a los hooks existentes.
-3. **Puesto**: añade una entrada en `src/data/stages.ts` (cuota, oleadas, patrones de patito, recompensa).
+3. **Puesto**: añade una entrada en `src/data/levels.ts` con munición y la lista cerrada de patitos (`spawnAt`, carril, velocidad y dirección). Nunca generes patitos en bucle dentro de la escena: destruir uno no debe provocar otro.
 
 ## Antes de dar algo por terminado
 
