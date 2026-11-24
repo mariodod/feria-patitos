@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
-import { LANES, LEVEL_1, type DuckSpawn } from './data/levels';
+import { LANES, LEVEL_1, SCORING, type DuckSpawn } from './data/levels';
 
 export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 270;
 
 const DUCK_HALF_WIDTH = 16;
-const HIT_OFFSET_Y = 26;
+const BODY_OFFSET_Y = 26;
+const BULLSEYE_OFFSET_X = -2;
 
 interface Duck {
   sprite: Phaser.GameObjects.Image;
@@ -106,7 +107,7 @@ class DemoScene extends Phaser.Scene {
     const duck: Duck = {
       sprite,
       vx: spawn.speed * spawn.direction,
-      points: 10,
+      points: SCORING.bodyPoints,
     };
     this.ducks.push(duck);
   }
@@ -123,9 +124,8 @@ class DemoScene extends Phaser.Scene {
     let frontDepth = -Infinity;
     for (let i = 0; i < this.ducks.length; i += 1) {
       const duck = this.ducks[i];
-      const cx = duck.sprite.x;
-      const cy = duck.sprite.y - HIT_OFFSET_Y;
-      const hit = Phaser.Math.Distance.Between(x, y, cx, cy) <= 13;
+      const cy = duck.sprite.y - BODY_OFFSET_Y;
+      const hit = Phaser.Math.Distance.Between(x, y, duck.sprite.x, cy) <= SCORING.bodyRadius;
 
       if (hit && duck.sprite.depth >= frontDepth) {
         index = i;
@@ -134,14 +134,29 @@ class DemoScene extends Phaser.Scene {
     }
 
     if (index !== -1) {
-      const duck = this.ducks.splice(index, 1)[0];
-      const cx = duck.sprite.x;
-      const cy = duck.sprite.y - HIT_OFFSET_Y;
-      this.score += duck.points;
-      this.popScore(cx, cy, duck.points);
-      this.spark(cx, cy);
-      duck.sprite.destroy();
-      this.cameras.main.shake(60, 0.004);
+      const duck = this.ducks[index];
+      const bullseye =
+        Phaser.Math.Distance.Between(
+          x,
+          y,
+          duck.sprite.x + BULLSEYE_OFFSET_X,
+          duck.sprite.y - BODY_OFFSET_Y,
+        ) <= SCORING.bullseyeRadius;
+      const points = bullseye ? SCORING.bullseyePoints : duck.points;
+
+      if (points > 0) {
+        this.ducks.splice(index, 1);
+        const cx = duck.sprite.x;
+        const cy = duck.sprite.y - BODY_OFFSET_Y;
+        this.score += points;
+        this.popScore(cx, cy, points, bullseye);
+        this.spark(cx, cy);
+        duck.sprite.destroy();
+        this.cameras.main.shake(bullseye ? 100 : 60, bullseye ? 0.007 : 0.004);
+      } else {
+        // Con bodyPoints a 0, un cuerpo no derriba al patito: solo cuenta la diana.
+        this.popScore(x, y, 0, false);
+      }
     }
 
     this.checkLevelEnd();
@@ -154,11 +169,11 @@ class DemoScene extends Phaser.Scene {
     }
   }
 
-  private popScore(x: number, y: number, points: number): void {
-    const label = this.add
-      .text(x, y, `+${points}`, this.textStyle(10))
-      .setOrigin(0.5)
-      .setDepth(80);
+  private popScore(x: number, y: number, points: number, bullseye: boolean): void {
+    const text = points === 0 ? 'FALLO' : `+${points}`;
+    const color = points === 0 ? '#9b9b9b' : bullseye ? '#ffd166' : '#fff1e6';
+    const style = { ...this.textStyle(bullseye ? 12 : 10), color };
+    const label = this.add.text(x, y, text, style).setOrigin(0.5).setDepth(80);
     this.tweens.add({
       targets: label,
       y: y - 22,

@@ -1,6 +1,17 @@
 /** Carriles horizontales sobre los que se deslizan los patitos. */
 export const LANES = [70, 120, 170];
 
+export const SCORING = {
+  /** Puntos por dar al cuerpo. Ponlo a 0 para que solo cuente la diana. */
+  bodyPoints: 10,
+  /** Puntos por dar en el círculo rojo de la diana. */
+  bullseyePoints: 25,
+  /** Radio de impacto sobre el cuerpo, en píxeles internos. */
+  bodyRadius: 13,
+  /** Radio del círculo rojo, en píxeles internos. */
+  bullseyeRadius: 4,
+};
+
 export interface DuckSpawn {
   /** Ms desde el inicio del puesto en que aparece este patito. */
   spawnAt: number;

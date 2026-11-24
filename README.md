@@ -34,6 +34,8 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 - [x] Resolución interna 480×270, escalado `FIT`, `pixelArt: true`.
 - [x] Demo semilla: lista cerrada de 12 patitos con palito, diana y hora de aparición en `src/data/levels.ts`. Se deslizan por rieles; si fallas, salen de pantalla. El puesto termina cuando no quedan patitos por aparecer ni en juego. Mira, disparos, balas, puntos y reinicio.
 
+**Puntuación de la demo:** cuerpo = 10 puntos, círculo rojo de la diana = 25 (número dorado y más sacudida). Se ajusta en `SCORING` (`src/data/levels.ts`). Si `bodyPoints` se pone a `0`, solo cuenta la diana y un impacto en el cuerpo no derriba al patito.
+
 ### M1 — Núcleo de disparo
 - [ ] Escenas separadas: `BootScene`, `MenuScene`, `GameScene`, `HudScene`.
 - [ ] Patas de pato con patrones de movimiento (recto, seno, zigzag, patito dorado).
@@ -44,7 +46,7 @@ La meta es poder abrir la web, pulsar *empezar*, jugar **3 puestos** con cartas,
 ### M2 — Capa roguelike (el corazón de la demo)
 - [ ] Baraja de **cartas de disparo**: robar 4–5 cartas por oleada, seleccionar una, disparar, descartar y recargar.
 - [ ] 4–6 tipos de disparo con efectos distintos: normal, rápido, escopeta, rebote, congelar, explosivo.
-- [ ] Puntuación estilo Balatro: `base × multiplicador`, combo por aciertos consecutivos y *headshots*; números flotantes y feedback visual.
+- [ ] Puntuación estilo Balatro: `base × multiplicador`, combo por aciertos consecutivos y bonus por diana (ya presente en la demo); números flotantes y feedback visual.
 - [ ] 3–4 reliquias con hooks sobre eventos (`onHit`, `onKill`, `onWaveEnd`).
 - [ ] Tienda entre puestos: comprar cartas/reliquias, quitar cartas, gestionar tickets.
 - [ ] Bucle de partida: 3 puestos → pantalla de resumen → victoria/derrota → reiniciar.
