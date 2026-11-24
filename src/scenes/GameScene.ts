@@ -346,6 +346,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private checkLevelEnd(): void {
+    if (!this.running) return;
     if (!isLevelComplete(this.nextSpawn, this.level.ducks.length, this.ducks.length)) return;
     if (this.earned < this.level.quota) {
       sfx.lose();
@@ -375,6 +376,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private finishRun(reason: RunEndReason): void {
+    if (!this.running) return;
     this.running = false;
     this.scene.stop('hud');
     this.scene.start('summary', this.endData(reason, false));

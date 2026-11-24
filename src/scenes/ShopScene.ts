@@ -9,9 +9,13 @@ import { pixelText } from '../game/systems/text';
 
 interface SlotView {
   bg: Phaser.GameObjects.Graphics;
-  name: Phaser.GameObjects.Text;
-  desc: Phaser.GameObjects.Text;
-  price: Phaser.GameObjects.Text;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  name?: Phaser.GameObjects.Text;
+  desc?: Phaser.GameObjects.Text;
+  price?: Phaser.GameObjects.Text;
 }
 
 export class ShopScene extends Phaser.Scene {
@@ -50,25 +54,19 @@ export class ShopScene extends Phaser.Scene {
     this.metaText = pixelText(this, GAME_WIDTH / 2, 258, '', 8, '#8be9fd').setOrigin(0.5, 0);
 
     for (let i = 0; i < 3; i += 1) {
-      const x = 12 + i * 116;
-      this.upgradeSlots.push(this.makeSlot(x, 74, 108, 112, () => this.buyUpgrade(i)));
+      this.upgradeSlots.push(this.makeSlot(12 + i * 116, 74, 108, 112, () => this.buyUpgrade(i)));
     }
     this.shellSlot = this.makeSlot(360, 74, 108, 112, this.buyShell);
 
     const refreshSlot = this.makeSlot(12, 196, 250, 40, this.refresh);
-    this.drawPanel(refreshSlot.bg, 12, 196, 250, 40);
-    pixelText(this, 137, 207, `REFRESCAR $${SHOP_REFRESH_PRICE}`, 10, '#ffd166').setOrigin(
-      0.5,
-      0,
-    );
+    this.drawPanel(refreshSlot.bg, refreshSlot.x, refreshSlot.y, refreshSlot.w, refreshSlot.h);
+    pixelText(this, 137, 207, `REFRESCAR $${SHOP_REFRESH_PRICE}`, 10, '#ffd166').setOrigin(0.5, 0);
 
     const nextSlot = this.makeSlot(360, 196, 108, 40, this.nextStall);
-    this.drawPanel(nextSlot.bg, 360, 196, 108, 40);
+    this.drawPanel(nextSlot.bg, nextSlot.x, nextSlot.y, nextSlot.w, nextSlot.h);
     pixelText(this, 414, 207, 'SIGUIENTE', 10).setOrigin(0.5, 0);
 
-    this.crosshair = this.add
-      .image(this.lastX, this.lastY, 'crosshair')
-      .setDepth(1000);
+    this.crosshair = this.add.image(this.lastX, this.lastY, 'crosshair').setDepth(1000);
     this.lastX = GAME_WIDTH / 2;
     this.lastY = GAME_HEIGHT / 2;
 
@@ -76,18 +74,36 @@ export class ShopScene extends Phaser.Scene {
   }
 
   private makeSlot(x: number, y: number, w: number, h: number, onClick: () => void): SlotView {
-    const slot: SlotView = {
-      bg: this.add.graphics(),
-      name: pixelText(this, x + 6, y + 8, '', 9),
-      desc: pixelText(this, x + 6, y + 30, '', 8).setWordWrapWidth(w - 12),
-      price: pixelText(this, x + 6, y + h - 20, '', 10, '#ffd166'),
-    };
+    const slot: SlotView = { bg: this.add.graphics(), x, y, w, h };
     this.add
       .zone(x, y, w, h)
       .setOrigin(0, 0)
       .setInteractive()
       .on('pointerdown', onClick);
     return slot;
+  }
+
+  private fillSlot(
+    slot: SlotView,
+    name: string,
+    desc: string,
+    price: string,
+    accent: string,
+    sold = false,
+  ): void {
+    this.drawPanel(slot.bg, slot.x, slot.y, slot.w, slot.h, sold);
+    slot.name?.destroy();
+    slot.desc?.destroy();
+    slot.price?.destroy();
+
+    // Phaser 4 falla al reutilizar Text con setText en algunos casos: se crean nuevos.
+    slot.name = pixelText(this, slot.x + 6, slot.y + 8, name, 9, sold ? '#7a7a8a' : accent).setWordWrapWidth(
+      slot.w - 12,
+    );
+    slot.desc = pixelText(this, slot.x + 6, slot.y + 30, desc, 8, '#fff1e6').setWordWrapWidth(
+      slot.w - 12,
+    );
+    slot.price = pixelText(this, slot.x + 6, slot.y + slot.h - 20, price, 10, '#ffd166');
   }
 
   private render(): void {
@@ -102,40 +118,30 @@ export class ShopScene extends Phaser.Scene {
 
     const meta = loadMeta();
     this.dollarsText.setText(`TUS DÓLARES: $${run.dollars}`);
-    this.infoText.setText(
-      `Mejoras: ${run.upgrades.length} · Cartuchos: ${run.shells.length}/4`,
-    );
-    this.metaText.setText(
-      `TOTALES $${meta.totalDollars} · DESBLOQUEOS ${meta.unlocked.length}`,
-    );
+    this.infoText.setText(`Mejoras: ${run.upgrades.length} · Cartuchos: ${run.shells.length}/4`);
+    this.metaText.setText(`TOTALES $${meta.totalDollars} · DESBLOQUEOS ${meta.unlocked.length}`);
 
     this.upgradeSlots.forEach((slot, index) => {
       const id = shop.upgrades[index];
       if (!id) {
-        this.drawPanel(slot.bg, 12 + index * 116, 74, 108, 112, true);
-        slot.name.setText('VENDIDO').setColor('#7a7a8a');
-        slot.desc.setText('');
-        slot.price.setText('');
+        this.fillSlot(slot, 'VENDIDO', '', '', '#7a7a8a', true);
         return;
       }
       const upgrade = UPGRADES[id];
-      this.drawPanel(slot.bg, 12 + index * 116, 74, 108, 112);
-      slot.name.setText(upgrade.name).setColor('#8be9fd');
-      slot.desc.setText(upgrade.description).setColor('#fff1e6');
-      slot.price.setText(`$${upgrade.price}`);
+      this.fillSlot(slot, upgrade.name, upgrade.description, `$${upgrade.price}`, '#8be9fd');
     });
 
     if (!shop.shell || shop.shellSold) {
-      this.drawPanel(this.shellSlot.bg, 360, 74, 108, 112, true);
-      this.shellSlot.name.setText('VENDIDO').setColor('#7a7a8a');
-      this.shellSlot.desc.setText('');
-      this.shellSlot.price.setText('');
+      this.fillSlot(this.shellSlot, 'VENDIDO', '', '', '#7a7a8a', true);
     } else {
       const shell = SHELLS[shop.shell];
-      this.drawPanel(this.shellSlot.bg, 360, 74, 108, 112);
-      this.shellSlot.name.setText(`CARTUCHO ${shell.name}`).setColor(shell.hex);
-      this.shellSlot.desc.setText(shell.description).setColor('#fff1e6');
-      this.shellSlot.price.setText(`$${shell.price}`);
+      this.fillSlot(
+        this.shellSlot,
+        `CARTUCHO ${shell.name}`,
+        shell.description,
+        `$${shell.price}`,
+        shell.hex,
+      );
     }
   }
 
